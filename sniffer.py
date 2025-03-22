@@ -6,13 +6,16 @@
 
 """
 
+import pyshark
 import subprocess
 import os
-import sys
 import logging
 import time
 
 
+"""
+    Logging Configuration
+"""
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s]: %(message)s"
@@ -27,7 +30,7 @@ def monitor_mode():
     # ask for root privileges
     if os.geteuid() != 0:
         logging.error("This script requires root privileges. Please run with sudo.")
-        sys.exit(-1)
+        exit(-1)
 
     # get the wireless interface
     interface = ""
@@ -40,7 +43,7 @@ def monitor_mode():
     
     if interface == "":
         logging.error("No wireless interface found")
-        sys.exit(-1)
+        exit(-1)
 
 
     logging.info(f"Wireless interface found: {interface}")
@@ -74,7 +77,7 @@ def disable_monitor_mode():
     # ask for root privileges
     if os.geteuid() != 0:
         logging.error("This script requires root privileges. Please run with sudo.")
-        sys.exit(-1)
+        exit(-1)
 
     # delete the interface
     logging.info("Deleting interface mon0")
@@ -86,22 +89,41 @@ def disable_monitor_mode():
     for line in result.stdout.split("\n"):
         if "mon0" in line:
             logging.error("Interface mon0 still exists")
-            sys.exit(-1)
+            exit(-1)
 
     return
 
 
 
 """
-    Sniffing Packets
+    Sniffing Packets and saves them in a .pcap file
 """
 def sniffing():
+    try:
+        logging.info(f"Starting packet sniffing on mon0 . . .")
+        capture = pyshark.LiveCapture(interface="mon0", output_file = "sniffed_packets.pcap")
+        for packet in capture.sniff_continuously(packet_count=100):
+            print(packet)
 
-    for i in range(1, 10):
-        logging.info(f". . . Sniffing Packets . . . {i}")
-        time.sleep(0.5)
+    except pyshark.TSharkNotFoundException:
+        logging.error("TShark not found. Please install it.")
+        exit(-1)
+    except PermissionError:
+        logging.error("Permission denied. Run the script with sudo.")
+        exit(-1)
+    except Exception as e:
+        logging.error(f"An error occurred during sniffing: {e}")
+        exit(-1)
 
 
+
+"""
+    Future Work:
+    - add the ability to use macos environment
+    - add the ability to change the mode of the already extisting wifi interface and then restart the network service
+    - add the ability to save the .pcap file on the project directory -> DONE
+
+"""
 
 # Running sniffer.py
 if __name__ == "__main__":
@@ -113,24 +135,13 @@ if __name__ == "__main__":
     # Save the .pcap file on the project directory
 
     monitor_mode()
-
-    sniffing()
-
+    # time.sleep(2)
+    # sniffing()
+    capture = pyshark.LiveCapture(interface="mon0")
+    # for packet in capture.sniff_continuously():
+    #     print(packet)
+    capture.sniff(timeout=10)
     disable_monitor_mode()
-
     logging.info("Packets sniffed successfully")
     logging.info("Exiting . . .")
-    sys.exit(0)
-
-
-
-
-
-
-"""
-    Future Work:
-    - add the ability to use macos environment
-    - add the ability to change the mode of the already extisting wifi interface and then restart the network service
-    - add the ability to save the .pcap file on the project directory
-
-"""
+    exit(0)
