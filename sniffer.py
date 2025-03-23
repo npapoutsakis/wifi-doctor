@@ -4,6 +4,9 @@
     It will monitor the packets transmitted over Wi-Fi. You will use Wireshark to monitor the Wi-Fi 
     network as you learned in lab 1. The output of the Wi-Fi Sniffer will be a .pcap file
 
+    Run:
+        sudo python3 sniffer.py
+
 """
 
 import subprocess
@@ -119,8 +122,8 @@ def sniffing(pcap_file='sniffed.pcap',packet_count=1000):
 
 """
     Future Work:
-    - add the ability to use macos environment - OPTIONAL
-    - add the ability to change the mode of the already extisting wifi interface and then restart the network service - NOT NEEDED
+    - add the ability to use macos environment -> OPTIONAL
+    - add the ability to change the mode of the already extisting wifi interface and then restart the network service -> NOT NEEDED
     - add the ability to save the .pcap file on the project directory -> DONE
 
 """
