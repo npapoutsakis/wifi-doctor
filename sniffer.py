@@ -6,11 +6,12 @@
 
 """
 
-import pyshark
 import subprocess
 import os
 import logging
-import time
+
+# import pyshark -- garbage, not working maybe use scapy, or tshark
+# https://github.com/KimiNewt/pyshark/issues/92
 
 
 """
@@ -97,51 +98,37 @@ def disable_monitor_mode():
 
 """
     Sniffing Packets and saves them in a .pcap file
+    tshark [ -i <capture interface>|- ] [ -f <capture filter> ] [ -2 ] [ -r <infile> ] [ -w <outfile>|- ] [ options ] [ <filter> ] [-c number of packets]
 """
-def sniffing():
-    try:
-        logging.info(f"Starting packet sniffing on mon0 . . .")
-        capture = pyshark.LiveCapture(interface="mon0", output_file = "sniffed_packets.pcap")
-        for packet in capture.sniff_continuously(packet_count=100):
-            print(packet)
+def sniffing(pcap_file='sniffed.pcap',packet_count=1000):
+    logging.info(f"Starting packet sniffing on mon0 . . .")
 
-    except pyshark.TSharkNotFoundException:
-        logging.error("TShark not found. Please install it.")
-        exit(-1)
-    except PermissionError:
-        logging.error("Permission denied. Run the script with sudo.")
-        exit(-1)
-    except Exception as e:
-        logging.error(f"An error occurred during sniffing: {e}")
-        exit(-1)
+    """
+        subprocess.run command here cannot directly write the output to a file
+        so, we have to use f.open().
+    """
+    f = open(pcap_file, "w")
+    subprocess.run(["sudo", "tshark", "-i", "mon0", '-c', str(packet_count), '-w', pcap_file], check=True, capture_output=False)
+
+    f.close()
+    logging.info(f"Pcap saved . . .")
+    
+    return
 
 
 
 """
     Future Work:
-    - add the ability to use macos environment
-    - add the ability to change the mode of the already extisting wifi interface and then restart the network service
+    - add the ability to use macos environment - OPTIONAL
+    - add the ability to change the mode of the already extisting wifi interface and then restart the network service - NOT NEEDED
     - add the ability to save the .pcap file on the project directory -> DONE
 
 """
 
 # Running sniffer.py
 if __name__ == "__main__":
-
-    # Enable Monitor Mode
-    # Enable Packet Sniffing
-    # Capture Packets
-    # Disable Monitor Mode
-    # Save the .pcap file on the project directory
-
     monitor_mode()
-    # time.sleep(2)
-    # sniffing()
-    capture = pyshark.LiveCapture(interface="mon0")
-    # for packet in capture.sniff_continuously():
-    #     print(packet)
-    capture.sniff(timeout=10)
+    sniffing()
     disable_monitor_mode()
-    logging.info("Packets sniffed successfully")
-    logging.info("Exiting . . .")
+    logging.info("Sniffering exited successfully . . .")
     exit(0)
