@@ -76,7 +76,7 @@ def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
         pcap_file, display_filter=disp_filter, use_json=True
     )
 
-    rel_time = data_capture[0].frame_info.time_relative
+    rel_time = float(data_capture[0].frame_info.time_relative)
     prev_rssi = None
 
     for packet in data_capture:
@@ -99,7 +99,7 @@ def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
         )  # if not wlan.signal_strength
         data_pkt.frequency = radio.frequency
         # data_pkt.rate_gap = idk if here or analyzer
-        data_pkt.timestamp = frame.time_relative - rel_time
+        data_pkt.timestamp = float(frame.time_relative) - rel_time
 
         data_packets.append(data_pkt)
 
