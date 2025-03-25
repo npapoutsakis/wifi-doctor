@@ -8,16 +8,11 @@ import time
 
 from data_packet import DataPacket
 
-PCAP_FILE = "pcaps/HowIWiFi_PCAP.pcap"
 BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
-# Change AP
-AP_MAC = "2C:F8:9B:DD:06:A0"
-DEV_MAC = "00:20:A6:FC:B0:36"
 
 # TODO: Some packets are sent to broadcast but receiver address is DEV_MAC, should we keep these? probably not
 # if not keep them, remove da == ra
-DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {AP_MAC} && wlan.ra == {DEV_MAC}) || (wlan.ta == {DEV_MAC} && wlan.ra == {AP_MAC})) && wlan.ra == wlan.da && !eapol"
 # 1.2. (wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == 2C:F8:9B:DD:06:A0 && wlan.ra == 00:20:A6:FC:B0:36) || (wlan.ra == 2C:F8:9B:DD:06:A0 && wlan.ta == 00:20:A6:FC:B0:36)) && !eapol
 
 """Pyshark"""
@@ -69,11 +64,13 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
 # beacon_packets = beacon_parser(PCAP_FILE)
 
 
-def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
+def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
+
     data_packets = []
+    DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ap_mac} && wlan.ra == {dev_mac}) || (wlan.ta == {dev_mac} && wlan.ra == {ap_mac})) && wlan.ra == wlan.da && !eapol"
 
     data_capture = pyshark.FileCapture(
-        pcap_file, display_filter=disp_filter, use_json=True
+        pcap_file, display_filter=DATA_DISP_FILTER, use_json=True
     )
 
     rel_time = float(data_capture[0].frame_info.time_relative)
@@ -86,10 +83,12 @@ def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
 
         data_pkt = DataPacket()
 
+        data_pkt.retry = bool(
+            int(wlan._all_fields["wlan.fc_tree"]["wlan.flags_tree"]["wlan.fc.retry"])
+        )
         data_pkt.phy = radio.phy
         data_pkt.mcs = radio.mcs_index
-        # very sus line, dk behavior if bandwidth not 20
-        data_pkt.bandwidth = 20 if radio.bandwidth == 0 else radio.bandwidth
+        data_pkt.bandwidth = radio.bandwidth
         data_pkt.short_gi = bool(radio.short_gi)
         data_pkt.data_rate = radio.data_rate
 
@@ -108,4 +107,7 @@ def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
     return data_packets
 
 
-data_packets = data_parser(PCAP_FILE, DATA_DISP_FILTER)
+# only export the functions
+__all__ = ["beacon_parser", "data_parser"]
+
+# data_packets = data_parser(PCAP_FILE, AP_MAC, DEV_MAC)
