@@ -1,2 +1,3 @@
 venv/
 doctor_env/
+__pycache__/

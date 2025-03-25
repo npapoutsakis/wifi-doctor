@@ -3,32 +3,32 @@ from typing import Optional, List, Dict
 import random
 
 
-# TODO: In memory List with all wlan packets data, or save to json file?
+# Deprecated :)
 class wlan_packet:
     def __init__(
         self,
-        ssid: str,
-        bssid: str,
-        transmitter_mac: str,
-        receiver_mac: str,
-        wlan_type: int,
-        wlan_subtype: int,
-        phy_type: str,
-        mcs_index: int,
-        bandwidth: int,
-        short_gi: bool,
-        data_rate: float,
-        channel: int,
-        frequency: int,
-        rssi: int,
-        timestamp: float,
+        ssid: str | None = None,
+        bssid: str | None = None,
+        ta: str | None = None,  # maybe sa?
+        ra: str | None = None,
+        wlan_type: int | None = None,
+        wlan_subtype: int | None = None,
+        phy_type: str | None = None,
+        mcs_index: int | None = None,
+        bandwidth: int | None = None,
+        short_gi: bool | None = None,
+        data_rate: float | None = None,
+        channel: int | None = None,
+        frequency: int | None = None,
+        rssi: int | None = None,
+        timestamp: float | None = None,
         snr: int | None = None,
         spatial_streams: int | None = None,
     ):
         self.ssid = ssid
         self.bssid = bssid
-        self.transmitter_mac = transmitter_mac
-        self.receiver_mac = receiver_mac
+        self.ta = ta
+        self.ra = ra
         self.wlan_type = wlan_type
         self.wlan_subtype = wlan_subtype
         self.phy_type = phy_type

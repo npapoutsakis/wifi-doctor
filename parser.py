@@ -2,121 +2,108 @@
 Pcap Parsing Tool
 """
 
-from scapy.utils import rdpcap
 import pyshark
-import scapy.layers.dot11 as dot11
-import wlan_packet
-import json
+from beacon_packet import BeaconPacket
 import time
 
+from data_packet import DataPacket
+
 PCAP_FILE = "pcaps/HowIWiFi_PCAP.pcap"
+BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
+
+# Change AP
+AP_MAC = "2C:F8:9B:DD:06:A0"
+DEV_MAC = "00:20:A6:FC:B0:36"
+
+# TODO: Some packets are sent to broadcast but receiver address is DEV_MAC, should we keep these? probably not
+# if not keep them, remove da == ra
+DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {AP_MAC} && wlan.ra == {DEV_MAC}) || (wlan.ta == {DEV_MAC} && wlan.ra == {AP_MAC})) && wlan.ra == wlan.da && !eapol"
+# 1.2. (wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == 2C:F8:9B:DD:06:A0 && wlan.ra == 00:20:A6:FC:B0:36) || (wlan.ra == 2C:F8:9B:DD:06:A0 && wlan.ta == 00:20:A6:FC:B0:36)) && !eapol
 
 """Pyshark"""
 
-
 # TODO: create two different captures, one for beacone fr(1.1) one for data fr(1.2)
-start_time = time.time()
-capture = pyshark.FileCapture(PCAP_FILE, use_json=True)
-for packet in capture:
-    radiotap = packet.radiotap  # Radiotap header
-    radio = packet.wlan_radio  # 802.11 radio
-    wlan = packet.wlan  # 802.11 wlan
 
 
-end_time = time.time()
-print(f"Time taken: {end_time - start_time} seconds")
+def beacon_parser(pcap_file) -> list[BeaconPacket]:
+    beacon_packets = []
 
-# packets = rdpcap(PCAP_FILE, count=1)
-# for packet in packets:
-#     print(packet)
+    beacon_capture = pyshark.FileCapture(
+        pcap_file,
+        display_filter=BEACON_DISP_FILTER,
+        use_json=True,
+    )
 
-# wlan_packets = []
-# for packet in packets:
-#     if packet.haslayer(dot11.Dot11):
-#         ssid = packet.info.decode() if packet.haslayer(dot11.Dot11Beacon) else "Unknown"
-#         bssid = packet.addr2 if packet.addr2 else "00:00:00:00:00:00"
-#         transmitter_mac = packet.addr2 if packet.addr2 else "00:00:00:00:00:00"
-#         receiver_mac = packet.addr1 if packet.addr1 else "00:00:00:00:00:00"
-#         wlan_type = packet.type if hasattr(packet, "type") else 0
-#         wlan_subtype = packet.subtype if hasattr(packet, "subtype") else 0
-#         phy_type = "Unknown"
-#         mcs_index = 0
-#         bandwidth = 20
-#         short_gi = False
-#         data_rate = 0.0
-#         channel = 0
-#         frequency = 0
-#         rssi = packet.dBm_AntSignal if hasattr(packet, "dBm_AntSignal") else -100
-#         timestamp = packet.time if hasattr(packet, "time") else 0.0
-#         snr = None
-#         spatial_streams = None
+    # data_capture = pyshark.FileCapture(
+    #     PCAP_FILE, display_filter=DATA_DISP_FILTER, use_json=True
+    # )
+    for packet in beacon_capture:
+        # radiotap = packet.radiotap  # Radiotap header
+        radio = packet.wlan_radio  # 802.11 radio
+        wlan = packet.wlan  # 802.11 wlan
+        mgt = packet["wlan.mgt"]  # 802.11 wireless LAN mgmt
 
-#         wlan_packet_obj = wlan_packet(
-#             ssid=ssid,
-#             bssid=bssid,
-#             transmitter_mac=transmitter_mac,
-#             receiver_mac=receiver_mac,
-#             wlan_type=wlan_type,
-#             wlan_subtype=wlan_subtype,
-#             phy_type=phy_type,
-#             mcs_index=mcs_index,
-#             bandwidth=bandwidth,
-#             short_gi=short_gi,
-#             data_rate=data_rate,
-#             channel=channel,
-#             frequency=frequency,
-#             rssi=rssi,
-#             timestamp=timestamp,
-#             snr=snr,
-#             spatial_streams=spatial_streams,
-#         )
-#         wlan_packets.append(wlan_packet_obj)
+        beacon_pkt = BeaconPacket()
+
+        # :)
+        beacon_pkt.ssid = mgt._all_fields["wlan.tagged.all"]["wlan.tag"][0]["wlan.ssid"]
+        beacon_pkt.bssid = wlan.bssid
+        beacon_pkt.ta = wlan.ta
+        beacon_pkt.phy_type = radio.phy
+        beacon_pkt.channel = radio.channel
+        beacon_pkt.frequency = radio.frequency
+        beacon_pkt.rssi = radio.signal_dbm  # if not wlan.signal_strength
+        beacon_pkt.snr = radio.snr if hasattr(radio, "snr") else None
+        beacon_pkt.timestamp = mgt.all.timestamp
+        beacon_packets.append(beacon_pkt)
+
+    # Uncomment if write in file
+    # with open("beacon_packets.json", "w") as f:
+    #     f.write(str(beacon_packets))
+    # To display pretty on terminal: cat beacon_packets.json | jq
+    # sudo apt install jq :)
+
+    return beacon_packets
 
 
-beacon = association_req = association_res = auth = deauth = total = total_wlan = 0
+# beacon_packets = beacon_parser(PCAP_FILE)
 
 
-# def save_packets_to_json(packet: "wlan_packet", file: str):
-#     """Append packet to json file"""
-#     with open(file, "a") as f:
-#         json.dump(packet, f, indent=2)
+def data_parser(pcap_file, disp_filter) -> list[DataPacket]:
+    data_packets = []
+
+    data_capture = pyshark.FileCapture(
+        pcap_file, display_filter=disp_filter, use_json=True
+    )
+
+    for packet in data_capture:
+        radiotap = packet.radiotap  # Radiotap header
+        radio = packet.wlan_radio  # 802.11 radio
+        wlan = packet.wlan  # 802.11 wlan
+
+        data_pkt = DataPacket()
+
+        data_pkt.phy = radio.phy
+        data_pkt.mcs = radio.mcs_index
+        # very sus line, dk behavior if bandwidth not 20
+        data_pkt.bandwidth = 20 if radio.bandwidth == 0 else radio.bandwidth
+        data_pkt.short_gi = bool(radio.short_gi)
+        data_pkt.data_rate = radio.data_rate
+
+        # Some dont contain signal_strength
+        data_pkt.rssi = (
+            radio.signal_dbm if hasattr(radio, "signal_dbm") else prev_rssi
+        )  # if not wlan.signal_strength
+        data_pkt.frequency = radio.frequency
+        # data_pkt.rate_gap = idk if here or analyzer
+        data_pkt.seq = wlan.seq
+        # data_pkt.timestamp = radiotap.timestamp???
+
+        data_packets.append(data_pkt)
+
+        prev_rssi = data_pkt.rssi
+
+    return data_packets
 
 
-# def get_layers(packet):
-#     layers = []
-#     while packet:
-#         layer = packet.__class__.__name__
-#         layers.append(layer)
-#         packet = packet.payload
-#     return layers
-
-
-# 1.2. (wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && wlan.addr == 2C:F8:9B:DD:06:A0 && wlan.addr == 00:20:A6:FC:B0:36
-
-
-# for packet in packets:
-#     if not packet.haslayer(dot11.Dot11Beacon):
-#         layers = get_layers(packet)
-#         print(layers)
-# for packet in packets:
-#     total += 1
-#     layers = get_layers(packet)
-#     if packet.haslayer(dot11.Dot11):
-#         total_wlan += 1
-#         if packet.haslayer(dot11.Dot11Beacon):
-#             beacon += 1
-#         elif packet.haslayer(dot11.Dot11AssoReq):
-#             association_req += 1
-#         elif packet.haslayer(dot11.Dot11AssoResp):
-#             association_res += 1
-#         elif packet.haslayer(dot11.Dot11Auth):
-#             auth += 1
-#         elif packet.haslayer(dot11.Dot11Deauth):
-#             deauth += 1
-# print(f"Total: {total}")
-# print(f"Total WLAN: {total_wlan}")
-# print(f"Beacon: {beacon}")
-# print(f"Association Request: {association_req}")
-# print(f"Association Response: {association_res}")
-# print(f"Authentication: {auth}")
-# print(f"Deauthentication: {deauth}")
+# data_packets = data_parser(PCAP_FILE, DATA_DISP_FILTER)
