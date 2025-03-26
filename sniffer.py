@@ -103,7 +103,7 @@ def disable_monitor_mode():
     Sniffing Packets and saves them in a .pcap file
     tshark [ -i <capture interface>|- ] [ -f <capture filter> ] [ -2 ] [ -r <infile> ] [ -w <outfile>|- ] [ options ] [ <filter> ] [-c number of packets]
 """
-def sniffing(pcap_file='sniffed.pcap',packet_count=1000):
+def sniffing(pcap_file, timeout, packet_count = 1000):
     logging.info(f"Starting packet sniffing on mon0 . . .")
 
     """
@@ -111,7 +111,10 @@ def sniffing(pcap_file='sniffed.pcap',packet_count=1000):
         so, we have to use f.open().
     """
     f = open(pcap_file, "w")
-    subprocess.run(["sudo", "tshark", "-i", "mon0", '-c', str(packet_count), '-w', pcap_file], check=True, capture_output=False)
+    if timeout:
+        subprocess.run(["sudo", "tshark", "-i", "mon0", '-w', pcap_file, '-a', f"duration:{timeout}"], check=True, capture_output=False)
+    else:
+        subprocess.run(["sudo", "tshark", "-i", "mon0", '-c', str(packet_count), '-w', pcap_file], check=True, capture_output=False)
 
     f.close()
     logging.info(f"Pcap saved . . .")
@@ -119,19 +122,47 @@ def sniffing(pcap_file='sniffed.pcap',packet_count=1000):
     return
 
 
+"""
+    Sniffing Packets on all channels
+"""
+
+def sniff_from_all_channels():
+
+    logging.info(f"Starting packet sniffing on all channels . . .")
+
+    for channel in range(1, 14):
+        logging.info(f"Sniffing channel {channel} . . .")
+
+
+        # set the channel
+        subprocess.run(["sudo", "iw", "dev", "mon0", "set", "channel", str(channel)], check=True, capture_output=False)
+        
+        sniffing(f"sniff_all/channel_{channel}.pcap", timeout=10)
+        """
+            subprocess.run command here cannot directly write the output to a file
+            so, we have to use f.open().
+        """ 
+
+        # maybe use mergecap to merge all the pcap files
+        # but the timing of the packets will be lost
+        # subprocess.run(["mergecap", "-w", "sniff_all.pcap", "sniff_all/*.pcap"], check=True, capture_output=False)
+
+        logging.info(f"Pcap saved . . .")
+
+
+    return
+
 
 """
     Future Work:
-    - add the ability to use macos environment -> OPTIONAL
-    - add the ability to change the mode of the already extisting wifi interface and then restart the network service -> NOT NEEDED
-    - add the ability to save the .pcap file on the project directory -> DONE
+    - add sniffed_packets to a large pcap containing all channels (1, .. 13)
 
 """
 
 # Running sniffer.py
 if __name__ == "__main__":
     monitor_mode()
-    sniffing()
+    sniff_from_all_channels()
     disable_monitor_mode()
     logging.info("Sniffering exited successfully . . .")
     exit(0)
