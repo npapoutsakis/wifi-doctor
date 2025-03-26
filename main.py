@@ -19,6 +19,7 @@ This will be the main file that will run the whole project.
 from cap_parser import *
 from monitor import evaluate_throughput
 import numpy as np
+from visualizer import plot_throughput
 
 # from visualizer import *
 
@@ -29,11 +30,11 @@ PCAP_FILE = "pcaps/HowIWiFi_PCAP.pcap"
 
 def main():
     packets = data_parser(PCAP_FILE, AP_MAC, DEV_MAC)
-    throughput_arr = evaluate_throughput(packets)
+    t, throughput_arr = evaluate_throughput(packets)
     print(np.min(throughput_arr))
     print(np.max(throughput_arr))
     print(np.mean(throughput_arr))
-    # plot_throughput(throughput_arr, "Throughput")
+    plot_throughput(t, throughput_arr)
     return
 
 

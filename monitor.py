@@ -4,15 +4,19 @@ from data_packet import DataPacket
 
 # TODO: add rate gap
 def evaluate_throughput(packets: list[DataPacket]):
-    throughput_arr = np.empty((len(packets), 1), dtype=float)
+    throughput_arr = np.empty(len(packets), dtype=float)
+    timestamps = np.empty(len(packets), dtype=float)
     retransmits = 0
     for i, packet in enumerate(packets):
         if packet.retry:
             retransmits += 1
         frame_loss_rate = retransmits / (i + 1)
+        
+        
+        timestamps[i] = packet.timestamp
         throughput_arr[i] = float(packet.data_rate) * (1.0 - frame_loss_rate)
 
-    return throughput_arr
+    return timestamps, throughput_arr
 
     # def performance_monitor(
     #     data_rate,
