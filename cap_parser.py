@@ -5,7 +5,6 @@ Pcap Parsing Tool
 import pyshark
 from beacon_packet import BeaconPacket
 import time
-
 from data_packet import DataPacket
 
 BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
