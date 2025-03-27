@@ -102,8 +102,9 @@ def disable_monitor_mode():
 """
     Sniffing Packets and saves them in a .pcap file
     tshark [ -i <capture interface>|- ] [ -f <capture filter> ] [ -2 ] [ -r <infile> ] [ -w <outfile>|- ] [ options ] [ <filter> ] [-c number of packets]
+    When timeout is 0, it will sniff for packet_count packets
 """
-def sniffing(pcap_file, timeout, packet_count = 1000):
+def sniffing(pcap_file, timeout = 0, packet_count = 500):
     logging.info(f"Starting packet sniffing on mon0 . . .")
 
     """
@@ -112,57 +113,47 @@ def sniffing(pcap_file, timeout, packet_count = 1000):
     """
     f = open(pcap_file, "w")
     if timeout:
+        # with timeout
         subprocess.run(["sudo", "tshark", "-i", "mon0", '-w', pcap_file, '-a', f"duration:{timeout}"], check=True, capture_output=False)
     else:
         subprocess.run(["sudo", "tshark", "-i", "mon0", '-c', str(packet_count), '-w', pcap_file], check=True, capture_output=False)
 
     f.close()
     logging.info(f"Pcap saved . . .")
-    
     return
 
 
 """
     Sniffing Packets on all channels
 """
-
 def sniff_from_all_channels():
 
     logging.info(f"Starting packet sniffing on all channels . . .")
 
-    for channel in range(1, 14):
+    for channel in range(1, 14): #(2.4GHz)
         logging.info(f"Sniffing channel {channel} . . .")
 
+        # disable the interface
+        # subprocess.run(["sudo", "ifconfig", "mon0", "down"], check=True, capture_output=False)
 
         # set the channel
         subprocess.run(["sudo", "iw", "dev", "mon0", "set", "channel", str(channel)], check=True, capture_output=False)
         
         sniffing(f"sniff_all/channel_{channel}.pcap", timeout=10)
-        """
-            subprocess.run command here cannot directly write the output to a file
-            so, we have to use f.open().
-        """ 
 
         # maybe use mergecap to merge all the pcap files
         # but the timing of the packets will be lost
         # subprocess.run(["mergecap", "-w", "sniff_all.pcap", "sniff_all/*.pcap"], check=True, capture_output=False)
-
         logging.info(f"Pcap saved . . .")
-
 
     return
 
 
-"""
-    Future Work:
-    - add sniffed_packets to a large pcap containing all channels (1, .. 13)
-
-"""
-
 # Running sniffer.py
 if __name__ == "__main__":
     monitor_mode()
-    sniff_from_all_channels()
+    sniffing("pcaps/sniff.pcap")
+    # sniff_from_all_channels()
     disable_monitor_mode()
     logging.info("Sniffering exited successfully . . .")
     exit(0)
