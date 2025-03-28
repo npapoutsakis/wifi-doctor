@@ -16,7 +16,7 @@ This will be the main file that will run the whole project.
     5. Visualization
 """
 
-from cap_parser import *
+from pcap_parser import *
 from monitor import evaluate_throughput
 import numpy as np
 from visualizer import plot_throughput
