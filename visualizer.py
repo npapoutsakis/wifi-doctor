@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import seaborn as sns
 import numpy as np
-
 from data_packet import DataPacket
-
+from field_mappings import *
 
 def plot_throughput(t, data):
     # t = np.array([pkt.timestamp for pkt in data])
@@ -13,41 +14,68 @@ def plot_throughput(t, data):
     plt.show()
     return
 
+def plot_channel_occupancy_by_ssid(df):
+    # Group data by CHANNEL and SSID and count the occurrences
+    channel_ssid_counts = df.groupby(['CHANNEL', 'SSID']).size().unstack(fill_value=0)
 
-# # 1. Προσομοίωση δεδομένων για 5 λεπτά (300 δευτερόλεπτα)
-# t = np.arange(0, 300, 1)  # χρόνος σε δευτερόλεπτα
-# np.random.seed(42)  # για αναπαραγωγιμότητα
-# throughput = 50 + 250 * np.sin(2 * np.pi * t / 300) + 50 * np.random.rand(len(t))
+    # Generate a color palette for each SSID
+    ssid_colors = sns.color_palette("tab20", len(channel_ssid_counts.columns))
 
-# # 2. Ορισμός ορίων για τις κατηγορίες
-# thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
+    # Plot channel occupancy with different colors for SSIDs
+    ax = channel_ssid_counts.plot(kind='bar', stacked=True, figsize=(12, 7), color=ssid_colors, edgecolor='black')
 
-# # 3. Χρώματα για κάθε ζώνη - πιο έντονα
-# colors = [
-#     "#ff0000",  # Very Poor (έντονο κόκκινο)
-#     "#ff6666",  # Poor (λαμπερό κόκκινο/ροζ)
-#     "#ffff66",  # Moderate (έντονο κίτρινο)
-#     "#99ff66",  # Good (ανοιχτό πράσινο)
-#     "#00ff00",  # Excellent (έντονο πράσινο)
-# ]
+    # Adding labels and title
+    plt.title('Channel Occupancy by SSID', fontsize=14)
+    plt.xlabel('Channel', fontsize=12)
+    plt.ylabel('Number of Beacons', fontsize=12)
+    plt.xticks(rotation=0)  # Rotate x-axis labels to make them horizontal
+    plt.legend(title='SSID', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
 
-# # 4. Δημιουργία του plot
-# fig, ax = plt.subplots(figsize=(10, 5))
+def plot_rssi_vs_frequency(df):
+    channel_ssid_rssi = df.groupby(['CHANNEL', 'SSID'])['RSSI(dBm)'].mean().unstack(fill_value=0)
 
-# # Ζωγραφίζουμε οριζόντιες ζώνες (horizontal spans) για κάθε κατηγορία
-# for i in range(len(thresholds) - 1):
-#     ax.axhspan(thresholds[i], thresholds[i + 1], color=colors[i], alpha=0.3)
+    # Get saturated colors for better visibility
+    ssid_colors = sns.color_palette("tab20", len(channel_ssid_rssi.columns))
+    
+    # Set transparency range (more opaque than before)
+    alpha_values = np.linspace(0.7, 0.95, len(channel_ssid_rssi.columns))
 
-# # 5. Σχεδιάζουμε την καμπύλη του throughput
-# ax.plot(t, throughput, label="Throughput (Mbps)", color="blue")
+    # Create plot
+    plt.figure(figsize=(14, 7))
+    legend_handles = []
 
-# # 6. Ρυθμίσεις του plot
-# ax.set_xlabel("Time (seconds)")
-# ax.set_ylabel("Throughput (Mbps)")
-# ax.set_title("Throughput vs. Time with Performance Bands (Intense Colors)")
-# ax.set_xlim([0, 300])  # Για 5 λεπτά
-# ax.set_ylim([0, thresholds[-1]])
-# ax.legend()
+    # Plot each SSID and channel
+    for i, ssid in enumerate(channel_ssid_rssi.columns):
+        for channel in channel_ssid_rssi.index:
+            bandwidth = channel_to_bandwidth_2_4_ghz[channel]
+            rssi_value = channel_ssid_rssi.loc[channel, ssid]
+            
+            width = bandwidth / 5  # 20MHz width = 4 channel units
+            
+            plt.bar(channel, rssi_value,
+                    width=width * 0.9,
+                    color=ssid_colors[i],
+                    alpha=alpha_values[i],
+                    edgecolor='black')
 
-# plt.tight_layout()
-# plt.show()
+        legend_handles.append(Line2D([0], [0], color=ssid_colors[i], lw=4, label=ssid))
+
+    # Configure axes with INVERTED Y-AXIS
+    plt.xticks(range(1, 14))
+    plt.yticks(range(-90, -29, 10))
+    plt.ylim(-90, -30)
+    plt.gca().invert_yaxis()  # This line flips the y-axis
+
+    # Add labels and title
+    plt.title('Wi-Fi Signal Strength by Channel', fontsize=14)
+    plt.xlabel('Channel', fontsize=12)
+    plt.ylabel('Signal Strength (dBm)', fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # Add legend
+    plt.legend(handles=legend_handles, title='SSID', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.show()

@@ -6,3 +6,5 @@ termcolor==2.5.0
 matplotlib
 pyshark
 numpy
+pandas
+seaborn
