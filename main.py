@@ -25,17 +25,27 @@ from visualizer import plot_throughput
 
 AP_MAC = "2C:F8:9B:DD:06:A0"
 DEV_MAC = "00:20:A6:FC:B0:36"
-PCAP_FILE = "pcaps/HowIWiFi_PCAP.pcap"
+PCAP_HOW = "./pcaps/HowIWiFi_PCAP.pcap"
+PCAP_FILE_5GHZ = "./beacon_pcaps/tuc-5ghz/52_80.pcap"
+PCAP_FILE_2GHZ_1 = "./beacon_pcaps/esties-2.4ghz/channel_1.pcap"
+PCAP_FILE_2GHZ_2 = "./beacon_pcaps/esties-2.4ghz/channel_2.pcap"
 
-
-def main():
-    packets = data_parser(PCAP_FILE, AP_MAC, DEV_MAC)
+def data_analyze():
+    packets = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
     t, throughput_arr = evaluate_throughput(packets)
     print(np.min(throughput_arr))
     print(np.max(throughput_arr))
     print(np.mean(throughput_arr))
     plot_throughput(t, throughput_arr)
-    return
+    
+def beacon_analyze():
+    beacon_packets1 = beacon_parser(PCAP_FILE_2GHZ_1)
+    beacon_packets2 = beacon_parser(PCAP_FILE_2GHZ_2)
+    beacon_packets3 = beacon_parser(PCAP_FILE_5GHZ)
+    print(beacon_packets2)
+
+def main():
+    beacon_analyze()
 
 
 if __name__ == "__main__":

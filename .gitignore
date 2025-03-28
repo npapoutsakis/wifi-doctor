@@ -1,3 +1,5 @@
 venv/
 doctor_env/
 __pycache__/
+.vscode
+launch.json

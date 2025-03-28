@@ -9,15 +9,7 @@ from data_packet import DataPacket
 
 BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
-
-# TODO: Some packets are sent to broadcast but receiver address is DEV_MAC, should we keep these? probably not
-# if not keep them, remove da == ra
-# 1.2. (wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == 2C:F8:9B:DD:06:A0 && wlan.ra == 00:20:A6:FC:B0:36) || (wlan.ra == 2C:F8:9B:DD:06:A0 && wlan.ta == 00:20:A6:FC:B0:36)) && !eapol
-
 """Pyshark"""
-
-# TODO: create two different captures, one for beacone fr(1.1) one for data fr(1.2)
-
 
 def beacon_parser(pcap_file) -> list[BeaconPacket]:
     beacon_packets = []
@@ -28,10 +20,8 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
         use_json=True,
     )
 
-    # data_capture = pyshark.FileCapture(
-    #     PCAP_FILE, display_filter=DATA_DISP_FILTER, use_json=True
-    # )
-    for packet in beacon_capture:
+    beacon_capture.load_packets()
+    for packet in beacon_capture._packets:
         # radiotap = packet.radiotap  # Radiotap header
         radio = packet.wlan_radio  # 802.11 radio
         wlan = packet.wlan  # 802.11 wlan
@@ -39,7 +29,7 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
 
         beacon_pkt = BeaconPacket()
 
-        # :)
+        # TODO: in some captures, ssid is in hex form ex. "54:53:43" = TUC
         beacon_pkt.ssid = mgt._all_fields["wlan.tagged.all"]["wlan.tag"][0]["wlan.ssid"]
         beacon_pkt.bssid = wlan.bssid
         beacon_pkt.ta = wlan.ta
@@ -60,12 +50,10 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
     return beacon_packets
 
 
-# beacon_packets = beacon_parser(PCAP_FILE)
-
-
 def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
     data_packets = []
+    # TODO: Fix for only downlink throughput
     DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ap_mac} && wlan.ra == {dev_mac}) || (wlan.ta == {dev_mac} && wlan.ra == {ap_mac})) && wlan.ra == wlan.da && !eapol"
 
     data_capture = pyshark.FileCapture(
@@ -75,7 +63,8 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
     rel_time = float(data_capture[0].frame_info.time_relative)
     prev_rssi = None
 
-    for packet in data_capture:
+    data_capture.load_packets()
+    for packet in data_capture._packets:
         frame = packet.frame_info  # frame
         radio = packet.wlan_radio  # 802.11 radio
         wlan = packet.wlan  # 802.11 wlan
@@ -108,5 +97,3 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
 # only export the functions
 __all__ = ["beacon_parser", "data_parser"]
-
-# data_packets = data_parser(PCAP_FILE, AP_MAC, DEV_MAC)

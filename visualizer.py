@@ -4,7 +4,6 @@ import numpy as np
 from data_packet import DataPacket
 
 
-# TODO: Change all dat, use np, reconsider what is good, poor etc.
 def plot_throughput(t, data):
     # t = np.array([pkt.timestamp for pkt in data])
     # thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
