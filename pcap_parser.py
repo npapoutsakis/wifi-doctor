@@ -23,7 +23,7 @@ BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
 
 # TODO: mexri to df kanei to idio to beacon_parser min epanalamvaneis kwdika
-def parsing_1_1(pcap_folder_list):
+def parse_beacon_folders(pcap_folder_list):
     # process each pcap file in the provided folder list
     for pcap_folder in pcap_folder_list:
 
@@ -35,20 +35,8 @@ def parsing_1_1(pcap_folder_list):
 
         for pcap_file in pcap_folder:
 
-            beacon_packets = beacon_parser(pcap_file)
-
-            for beacon in beacon_packets:
-                total_beacons.append(
-                    {
-                        "SSID": convert_ssid(beacon.ssid),
-                        "BSSID": beacon.bssid,
-                        "PHY": phy_type_mapping.get(beacon.phy_type),
-                        "CHANNEL": beacon.channel,
-                        "FREQUENCY": beacon.frequency,
-                        "RSSI(dBm)": beacon.rssi,
-                        "SNR(dB)": beacon.snr,
-                    }
-                )
+            beacon_packets = beacon_pcap_parser(pcap_file)
+            total_beacons.extend(beacon_packets)
 
         # convert to pandas DataFrame and save to CSV
         df = pd.DataFrame(total_beacons)
@@ -62,7 +50,7 @@ def parsing_1_1(pcap_folder_list):
         df.to_csv(f"./data/{network_name}.csv", index=False)
 
 
-def beacon_parser(pcap_file) -> list[BeaconPacket]:
+def beacon_pcap_parser(pcap_file) -> list[BeaconPacket]:
     beacon_packets = []
 
     beacon_capture = pyshark.FileCapture(
@@ -73,7 +61,6 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
 
     beacon_capture.load_packets()
     for packet in beacon_capture._packets:
-        # radiotap = packet.radiotap  # Radiotap header
         radio = packet.wlan_radio  # 802.11 radio
         wlan = packet.wlan  # 802.11 wlan
         mgt = packet["wlan.mgt"]  # 802.11 wireless LAN mgmt
@@ -81,7 +68,10 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
         beacon_pkt = BeaconPacket()
 
         # TODO: in some captures, ssid is in hex form ex. "54:53:43" = TUC
-        beacon_pkt.ssid = mgt._all_fields["wlan.tagged.all"]["wlan.tag"][0]["wlan.ssid"]
+        ssid = convert_ssid(
+            mgt._all_fields["wlan.tagged.all"]["wlan.tag"][0]["wlan.ssid"]
+        )
+        beacon_pkt.ssid = ssid
         beacon_pkt.bssid = wlan.bssid
         beacon_pkt.ta = wlan.ta
         beacon_pkt.phy_type = radio.phy
@@ -90,7 +80,7 @@ def beacon_parser(pcap_file) -> list[BeaconPacket]:
         beacon_pkt.rssi = radio.signal_dbm  # if not wlan.signal_strength
         beacon_pkt.snr = radio.snr if hasattr(radio, "snr") else None
         beacon_pkt.timestamp = mgt.all.timestamp
-        beacon_packets.append(beacon_pkt)
+        beacon_packets.append(beacon_pkt.to_dict())
 
     # Uncomment if write in file
     # with open("beacon_packets.json", "w") as f:
@@ -148,4 +138,4 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
 
 # only export the functions
-__all__ = ["beacon_parser", "data_parser", "parsing_1_1"]
+__all__ = ["beacon_pcap_parser", "data_parser", "parse_beacon_folders"]

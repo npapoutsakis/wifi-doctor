@@ -40,31 +40,33 @@ PCAP_FILES_5_GHZ_TUC = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
 """
     Scenario 1.1: WiFi Network Density
 """
-def scenario_1_1():
+
+
+def network_density():
 
     pcap_folder_list_2_4_ghz = [PCAP_FILES_2_4_GHZ_TUC, PCAP_FILES_2_4_GHZ_HOME]
-    pcap_folder_list_5_ghz = [PCAP_FILES_5_GHZ_TUC, PCAP_FILES_5_GHZ_HOME]
+    # pcap_folder_list_5_ghz = [PCAP_FILES_5_GHZ_TUC, PCAP_FILES_5_GHZ_HOME]
 
     # Parsing -> saves v files
-    # parsing_1_1(pcap_folder_list_2_4_ghz)
-    # parsing_1_1(pcap_folder_list_5_ghz)
+    parse_beacon_folders(pcap_folder_list_2_4_ghz)
+    # parse_beacon_folders(pcap_folder_list_5_ghz)
 
     # monitor and calculate network density
     network_files = {
-        "TUC-2.4GHz":"./data/tuc-2.4ghz.csv",
-        "TUC-5GHz":"./data/tuc-5ghz.csv",
-        "HOME-2.4GHz":"./data/home-2.4ghz.csv",
+        "TUC-2.4GHz": "./data/tuc-2.4ghz.csv",
+        # "TUC-5GHz": "./data/tuc-5ghz.csv",
+        "HOME-2.4GHz": "./data/home-2.4ghz.csv",
         # "HOME-5GHz":"./data/home-5ghz.csv",
     }
 
-    # monitor each network file
+    # # monitor each network file
     monitor_1_1(network_files)
 
     # visualize
-    # df = pd.read_csv(network_files["TUC-5GHz"])
-    # plot_rssi_vs_frequency(df)
+    df = pd.read_csv(network_files["HOME-2.4GHz"])
+    plot_rssi_vs_frequency(df)
 
-    return
+    # return
 
 
 def data_analyze():
@@ -77,9 +79,9 @@ def data_analyze():
 
 
 def main():
-    data_analyze()
+    # data_analyze()
     # Uncomment gia to diko sou
-    # scenario_1_1()
+    network_density()
 
 
 if __name__ == "__main__":
