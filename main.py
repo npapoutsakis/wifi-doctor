@@ -37,15 +37,6 @@ PCAP_FILES_5_GHZ_HOME = glob.glob("./beacon_pcaps/home-5ghz/*.pcap")
 PCAP_FILES_5_GHZ_TUC = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
 
 
-def data_analyze():
-    packets = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
-    t, throughput_arr = evaluate_throughput(packets)
-    print(np.min(throughput_arr))
-    print(np.max(throughput_arr))
-    print(np.mean(throughput_arr))
-    plot_throughput(t, throughput_arr)
-
-
 """
     Scenario 1.1: WiFi Network Density
 """
