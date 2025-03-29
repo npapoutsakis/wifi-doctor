@@ -58,6 +58,7 @@ def plot_rssi_vs_frequency(df):
     # Plot each SSID and channel
     for i, ssid in enumerate(channel_ssid_rssi.columns):
         for channel in channel_ssid_rssi.index:
+            # TODO: Ftiakse to bandwidth
             bandwidth = channel_to_bandwidth_2_4_ghz[channel]
             rssi_value = channel_ssid_rssi.loc[channel, ssid]
 
