@@ -1,4 +1,5 @@
 from data_packet import DataPacket
+from field_mappings import *
 
 
 # Ref https://wlanprofessionals.com/mcs-table-and-how-to-use-it/
@@ -21,14 +22,16 @@ def get_exp_rate_80211n(rssi: int):
         return 0
 
 
-def rate_gap_80211n(packet: DataPacket):
-    rssi = packet.rssi
+def rate_gap(packet: DataPacket):
+    if phy_type_mapping[packet.phy] == "802.11n":
+        return rate_gap_80211n(packet.rssi, packet.mcs)
 
+
+def rate_gap_80211n(rssi: int, rate: int):
     # Check that rssi exists in packet, if not change monitor to always include a value
     assert rssi is not None
 
-    rate = packet.mcs
-    exp_rate = get_exp_rate_80211n(packet.rssi)
+    exp_rate = get_exp_rate_80211n(rssi)
 
     # 1 spatial stream
     if rate < 8:

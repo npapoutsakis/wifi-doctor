@@ -9,12 +9,13 @@ from field_mappings import *
 def plot_throughput(t, data):
     # t = np.array([pkt.timestamp for pkt in data])
     # thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
+    plt.figure()
     plt.plot(t, data)
     plt.grid(True)
     plt.ylabel("Throughput (Mbps)")
     plt.xlabel("Time (s)")
     # plt.tight_layout()
-    plt.show()
+    # plt.show()
     return
 
 

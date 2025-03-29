@@ -6,7 +6,7 @@ from pcap_parser import *
 
 
 # TODO: add rate gap
-def evaluate_throughput(packets: list[DataPacket]):
+def evaluate_throughput_list(packets: list[DataPacket]):
     throughput_arr = np.empty(len(packets), dtype=float)
     timestamps = np.empty(len(packets), dtype=float)
     retransmits = 0
@@ -17,6 +17,17 @@ def evaluate_throughput(packets: list[DataPacket]):
 
         timestamps[i] = packet.timestamp
         throughput_arr[i] = float(packet.data_rate) * (1.0 - frame_loss_rate)
+
+    return timestamps, throughput_arr
+
+
+def evaluate_throughput_df(packets_df: pd.DataFrame):
+    throughput_arr = packets_df["data_rate"].values.copy()
+    timestamps = packets_df["timestamp"].values.copy()
+    retransmits = packets_df["retry"].cumsum()
+    frame_loss_rate = retransmits / np.arange(1, len(packets_df) + 1)
+
+    throughput_arr *= 1.0 - frame_loss_rate
 
     return timestamps, throughput_arr
 

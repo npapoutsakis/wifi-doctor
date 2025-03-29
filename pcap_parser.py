@@ -142,6 +142,9 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
         prev_rssi = data_pkt.rssi
 
+    df = pd.DataFrame([data_pkt.__dict__ for data_pkt in data_packets])
+    df.to_csv("./data/data_HOW.csv", index=False)
+
     return data_packets
 
 

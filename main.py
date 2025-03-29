@@ -23,6 +23,7 @@ import glob  # used for file globbing :) [*.pcap]
 from pcap_parser import *
 from monitor import *
 from visualizer import *
+import matplotlib.pyplot as plt
 
 
 AP_MAC = "2C:F8:9B:DD:06:A0"
@@ -48,11 +49,15 @@ def scenario_1_1():
 
 def data_analyze():
     packets = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
-    t, throughput_arr = evaluate_throughput(packets)
-    print(np.min(throughput_arr))
-    print(np.max(throughput_arr))
-    print(np.mean(throughput_arr))
-    plot_throughput(t, throughput_arr)
+    df = pd.read_csv("./data/data_HOW.csv")
+    t1, throughput_arr1 = evaluate_throughput_df(df)
+    t2, throughput_arr2 = evaluate_throughput_list(packets)
+    # print(np.min(throughput_arr))
+    # print(np.max(throughput_arr))
+    # print(np.mean(throughput_arr))
+    plot_throughput(t1, throughput_arr1)
+    plot_throughput(t2, throughput_arr2)
+    plt.show()
 
 
 def main():
