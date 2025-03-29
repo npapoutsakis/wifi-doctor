@@ -22,14 +22,13 @@ def evaluate_throughput_list(packets: list[DataPacket]):
 
 
 def evaluate_throughput_df(packets_df: pd.DataFrame):
-    throughput_arr = packets_df["data_rate"].values.copy()
-    timestamps = packets_df["timestamp"].values.copy()
     retransmits = packets_df["retry"].cumsum()
     frame_loss_rate = retransmits / np.arange(1, len(packets_df) + 1)
 
-    throughput_arr *= 1.0 - frame_loss_rate
+    throughput_arr = packets_df["data_rate"].values * (1.0 - frame_loss_rate)
+    # packets_df.to_csv("./data/throughput.csv", index=False)
 
-    return timestamps, throughput_arr
+    return throughput_arr
 
 
 """

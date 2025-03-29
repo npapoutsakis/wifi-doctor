@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 from data_packet import DataPacket
 from field_mappings import *
 
@@ -22,9 +24,17 @@ def get_exp_rate_80211n(rssi: int):
         return 0
 
 
-def rate_gap(packet: DataPacket):
-    if phy_type_mapping[packet.phy] == "802.11n":
-        return rate_gap_80211n(packet.rssi, packet.mcs)
+def rate_gap(df: pd.DataFrame):
+    rate_gap_arr = np.empty(df.shape[0], dtype=int)  # get rows
+
+    for index, packet in df.iterrows():
+        if phy_type_mapping[packet.get("phy")] == "802.11n":
+            gap = rate_gap_80211n(packet.get("rssi"), packet.get("mcs"))
+            rate_gap_arr[index] = gap
+        else:
+            print("Non-802.11n packet")
+
+    return rate_gap_arr
 
 
 def rate_gap_80211n(rssi: int, rate: int):

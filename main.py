@@ -16,6 +16,7 @@ This will be the main file that will run the whole project.
     5. Visualization
 """
 
+from analyzer import analyze_data_packets
 from field_mappings import *
 import pandas as pd
 import numpy as np
@@ -71,22 +72,32 @@ def network_density():
 
 
 def data_analyze():
-    packets = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
+
+    data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
+
+    # read multiple csv's?
     df = pd.read_csv("./data/data_HOW.csv")
-    t1, throughput_arr1 = evaluate_throughput_df(df)
-    t2, throughput_arr2 = evaluate_throughput_list(packets)
+
+    # t1, throughput_arr1 = evaluate_throughput_list(packets)
+    throughput_arr = evaluate_throughput_df(df)
+
     # print(np.min(throughput_arr))
     # print(np.max(throughput_arr))
     # print(np.mean(throughput_arr))
-    plot_throughput(t1, throughput_arr1)
-    plot_throughput(t2, throughput_arr2)
+
+    rate_gap_arr = analyze_data_packets(df)
+
+    plot_rate_gap(df["timestamp"], rate_gap_arr)
+    # plot_throughput(t1, throughput_arr1)
+    # plot_throughput_df(df2)
+
     plt.show()
 
 
 def main():
-    # data_analyze()
+    data_analyze()
     # Uncomment gia to diko sou
-    network_density()
+    # network_density()
 
 
 if __name__ == "__main__":

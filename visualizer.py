@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import pandas as pd
 import seaborn as sns
 import numpy as np
 from data_packet import DataPacket
@@ -14,6 +15,47 @@ def plot_throughput(t, data):
     plt.grid(True)
     plt.ylabel("Throughput (Mbps)")
     plt.xlabel("Time (s)")
+    # plt.tight_layout()
+    # plt.show()
+    return
+
+
+def plot_throughput_df(df: pd.DataFrame):
+    # t = np.array([pkt.timestamp for pkt in data])
+    # thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
+    plt.figure()
+    plt.plot(df["timestamp"].values, df["throughput"].values)
+    plt.grid(True)
+    plt.ylabel("Throughput (Mbps)")
+    plt.xlabel("Time (s)")
+    # plt.tight_layout()
+    # plt.show()
+    return
+
+
+def plot_rate_gap(t, data):
+
+    # Get indices where values != 0
+    non_zero_mask = data != 0
+    non_zero_times = t[non_zero_mask]
+    non_zero_values = data[non_zero_mask]
+
+    # Plot
+    plt.figure(figsize=(12, 4))
+    plt.scatter(non_zero_times, non_zero_values, c="b", s=10)
+    # plt.colorbar(label="Rate Gap Value")
+    plt.xlabel("Time")
+    plt.ylabel("Rate Gap")
+    plt.title("Non-Zero Rate Gaps Over Time")
+    plt.grid(alpha=0.3)
+
+    # sns.heatmap(data, cmap="viridis", cbar=False, mask=(data == 0))
+    # plt.title("Sparse Non-Zero Values (Yellow/Green = 3/4/5)")
+
+    # plt.plot(t, data)
+    # plt.grid(True)
+    # plt.ylabel("Rate Gap")
+    # plt.xlabel("Time (s)")
     # plt.tight_layout()
     # plt.show()
     return

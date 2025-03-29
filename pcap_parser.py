@@ -91,7 +91,7 @@ def beacon_pcap_parser(pcap_file) -> list[BeaconPacket]:
     return beacon_packets
 
 
-def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
+def data_parser(pcap_file, ap_mac, dev_mac):
 
     data_packets = []
     # TODO: Fix for only downlink throughput
@@ -136,8 +136,6 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
     df = pd.DataFrame([data_pkt.__dict__ for data_pkt in data_packets])
     df.to_csv("./data/data_HOW.csv", index=False)
-
-    return data_packets
 
 
 # only export the functions
