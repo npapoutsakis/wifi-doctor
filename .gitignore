@@ -4,5 +4,3 @@ __pycache__/
 .vscode
 launch.json
 todo.md
-data/*
-output/*
