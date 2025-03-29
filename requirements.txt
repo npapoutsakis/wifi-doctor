@@ -8,3 +8,4 @@ pyshark
 numpy
 pandas
 seaborn
+PyQt5
