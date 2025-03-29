@@ -11,6 +11,7 @@ BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
 """Pyshark"""
 
+
 def beacon_parser(pcap_file) -> list[BeaconPacket]:
     beacon_packets = []
 
@@ -54,8 +55,9 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
     data_packets = []
     # TODO: Fix for only downlink throughput
-    DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ap_mac} && wlan.ra == {dev_mac}) || (wlan.ta == {dev_mac} && wlan.ra == {ap_mac})) && wlan.ra == wlan.da && !eapol"
-
+    # Do i need other subtypes?
+    DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ap_mac} && wlan.ra == {dev_mac})) && !eapol"
+    # DATA_DISP_FILTER_PREV = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ap_mac} && wlan.ra == {dev_mac}) || (wlan.ta == {dev_mac} && wlan.ra == {ap_mac})) && wlan.ra == wlan.da && !eapol"
     data_capture = pyshark.FileCapture(
         pcap_file, display_filter=DATA_DISP_FILTER, use_json=True
     )
