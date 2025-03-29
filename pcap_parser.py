@@ -45,6 +45,8 @@ def parsing_1_1(pcap_folder_list):
                         "PHY": phy_type_mapping.get(beacon.phy_type),
                         "CHANNEL": beacon.channel,
                         "FREQUENCY": beacon.frequency,
+                        "RSSI(dBm)": beacon.rssi,
+                        "SNR(dB)": beacon.snr,
                     }
                 )
 
