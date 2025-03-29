@@ -1,6 +1,8 @@
 import numpy as np
 from data_packet import DataPacket
-
+import pandas as pd
+from field_mappings import *
+from pcap_parser import *
 
 # TODO: add rate gap
 def evaluate_throughput(packets: list[DataPacket]):
@@ -20,61 +22,22 @@ def evaluate_throughput(packets: list[DataPacket]):
 
 
 
+# Converts a hex SSID into a string
+def convert_ssid(hex_ssid):
+    hex_str = hex_ssid.replace(":", "")
+    bytes_data = bytes.fromhex(hex_str)
+    return bytes_data.decode("ascii")
 
 
+def calculate_network_density():
+
+    # TODO: implement this function
+    # rssid metric: Pefkianakis et al. “Characterizing Home Wireless Performance: The Gateway View”, IEEE INFOCOM 2015 
+    # rssid = Sum(1/rssi)
+
+    return 
 
 
-
-    # def performance_monitor(
-    #     data_rate,
-    #     frame_loss_rate,
-    #     signal_strength,
-    #     snr,
-    #     mcs_index,
-    #     bandwidth,
-    #     spatial_streams,
-    #     short_gi,
-    # ):
-
-    #     throughput = evaluate_wifi_performance(
-    #         data_rate,
-    #         frame_loss_rate,
-    #         signal_strength,
-    #         snr,
-    #         bandwidth,
-    #         spatial_streams,
-    #         short_gi,
-    #     )
-
-    #     if throughput > 250:
-    #         return "Excellent"
-    #     elif throughput > 150:
-    #         return "Good"
-    #     elif throughput > 75:
-    #         return "Moderate"
-    #     elif throughput > 25:
-    #         return "Poor"
-    #     else:
-    #         return "Very Poor"
-
-    # def calculate_loss_rate(packets):
-
-    #     total_packets = len(packets)
-    #     if total_packets == 0:
-    #         return 0.0  # Αν δεν υπάρχουν πακέτα, το loss rate είναι 0
-
-    #     # Υποθέτουμε ότι κάθε packet έχει ένα πεδίο "is_lost" (True/False)
-    #     lost_packets = sum(1 for pkt in packets if pkt.get("is_lost", False))
-
-    #     return lost_packets / total_packets
-
-    """
-    Υπολογίζει το ποσοστό απώλειας πλαισίων (frame loss rate).
-    
-    Παράμετροι:
-    - packets (list): Μια λίστα με πακέτα ή πλαίσια. Κάθε στοιχείο μπορεί να είναι
-      λεξικό ή αντικείμενο που περιέχει μια ένδειξη για το αν το πακέτο χάθηκε.
-      
-    Επιστρέφει:
-    - float: Ένας αριθμός μεταξύ 0 και 1 που εκφράζει το ποσοστό απώλειας.
-    """
+def monitor_1_1():
+    # TODO: implement this function
+    return

@@ -2,14 +2,64 @@
 Pcap Parsing Tool
 """
 
+import os
 import pyshark
 from beacon_packet import BeaconPacket
-import time
 from data_packet import DataPacket
+import pandas as pd
+from field_mappings import *
+from monitor import *
+
 
 BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
 """Pyshark"""
+
+
+"""
+    Parsing 1.1
+    This function parses all pcap files in the provided folder list and extracts beacon data.
+    It then converts the extracted beacon data into a pandas DataFrame and saves it to a CSV file.
+"""
+def parsing_1_1(pcap_folder_list):
+
+    # process each pcap file in the provided folder list
+    for pcap_folder in pcap_folder_list:
+
+        if not pcap_folder:
+            continue
+
+        # total beacons per network
+        total_beacons = []
+        
+        for pcap_file in pcap_folder:
+            
+            beacon_packets = beacon_parser(pcap_file)             
+            
+            for beacon in beacon_packets:
+                total_beacons.append({
+                    "SSID": convert_ssid(beacon.ssid),
+                    "BSSID": beacon.bssid,
+                    "PHY": phy_type_mapping.get(beacon.phy_type),
+                    "CHANNEL": beacon.channel,
+                    "FREQUENCY": beacon.frequency,
+                    "RSSI(dBm)": beacon.rssi,
+                    "SNR(dB)": beacon.snr,
+                })
+            
+        # convert to pandas DataFrame and save to CSV
+        df = pd.DataFrame(total_beacons)
+
+        df["CHANNEL"] = df["CHANNEL"].astype('int32')
+        df["RSSI(dBm)"] = df["RSSI(dBm)"].astype('int32')
+
+        # parse the network name and save to CSV
+        network_name = os.path.basename(os.path.dirname(pcap_folder[0]))
+
+        df.to_csv(f"./data/{network_name}.csv", index=False)
+                            
+    return
+
 
 def beacon_parser(pcap_file) -> list[BeaconPacket]:
     beacon_packets = []
@@ -96,4 +146,4 @@ def data_parser(pcap_file, ap_mac, dev_mac) -> list[DataPacket]:
 
 
 # only export the functions
-__all__ = ["beacon_parser", "data_parser"]
+__all__ = ["beacon_parser", "data_parser", "parsing_1_1"]
