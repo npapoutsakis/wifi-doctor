@@ -4,6 +4,7 @@ import pandas as pd
 from field_mappings import *
 from pcap_parser import *
 
+
 # TODO: add rate gap
 def evaluate_throughput(packets: list[DataPacket]):
     throughput_arr = np.empty(len(packets), dtype=float)
@@ -13,29 +14,20 @@ def evaluate_throughput(packets: list[DataPacket]):
         if packet.retry:
             retransmits += 1
         frame_loss_rate = retransmits / (i + 1)
-        
-        
+
         timestamps[i] = packet.timestamp
         throughput_arr[i] = float(packet.data_rate) * (1.0 - frame_loss_rate)
 
     return timestamps, throughput_arr
 
 
-
-# Converts a hex SSID into a string
-def convert_ssid(hex_ssid):
-    hex_str = hex_ssid.replace(":", "")
-    bytes_data = bytes.fromhex(hex_str)
-    return bytes_data.decode("ascii")
-
-
 def calculate_network_density():
 
     # TODO: implement this function
-    # rssid metric: Pefkianakis et al. “Characterizing Home Wireless Performance: The Gateway View”, IEEE INFOCOM 2015 
+    # rssid metric: Pefkianakis et al. “Characterizing Home Wireless Performance: The Gateway View”, IEEE INFOCOM 2015
     # rssid = Sum(1/rssi)
 
-    return 
+    return
 
 
 def monitor_1_1():
