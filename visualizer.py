@@ -152,7 +152,7 @@ def plot_channel_occupancy_by_ssid(df):
 
 def plot_rssi_vs_frequency(df):
     channel_ssid_rssi = (
-        df.groupby(["CHANNEL", "SSID"])["RSSI(dBm)"].mean().unstack(fill_value=0)
+        df.groupby(["channel", "ssid"])["rssi"].mean().unstack(fill_value=0)
     )
 
     # Get saturated colors for better visibility
@@ -171,25 +171,28 @@ def plot_rssi_vs_frequency(df):
             # TODO: Ftiakse to bandwidth
             bandwidth = channel_to_bandwidth_2_4_ghz[channel]
             rssi_value = channel_ssid_rssi.loc[channel, ssid]
+            if rssi_value == 0:
+                print(f"SSID: {ssid} Channel: {channel} RSSI: {rssi_value}")
 
             width = bandwidth / 5  # 20MHz width = 4 channel units
 
             plt.bar(
                 channel,
-                rssi_value,
+                rssi_value + 90,
                 width=width * 0.9,
                 color=ssid_colors[i],
-                alpha=alpha_values[i],
+                alpha=0.3,
                 edgecolor="black",
+                bottom=-90,
             )
 
         legend_handles.append(Line2D([0], [0], color=ssid_colors[i], lw=4, label=ssid))
 
     # Configure axes with INVERTED Y-AXIS
     plt.xticks(range(1, 14))
-    plt.yticks(range(-90, -29, 10))
-    plt.ylim(-90, -30)
-    plt.gca().invert_yaxis()  # This line flips the y-axis
+    plt.yticks(range(-90, 31, 10))
+    plt.ylim(-90, 30)
+    # plt.gca().invert_yaxis()  # This line flips the y-axis
 
     # Add labels and title
     plt.title("Wi-Fi Signal Strength by Channel", fontsize=14)

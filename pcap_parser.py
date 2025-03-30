@@ -23,31 +23,23 @@ BEACON_DISP_FILTER = "wlan.fc.type_subtype == 8 && !eapol"
 
 
 # TODO: mexri to df kanei to idio to beacon_parser min epanalamvaneis kwdika
-def parse_beacon_folders(pcap_folder_list):
-    # process each pcap file in the provided folder list
-    for pcap_folder in pcap_folder_list:
+def parse_network_beacon_pcaps(pcap_folder, network_name):
+    os.makedirs(f"./data/parsed", exist_ok=True)
 
-        if not pcap_folder:
-            continue
+    # total beacons per network
+    total_beacons = []
 
-        # total beacons per network
-        total_beacons = []
+    for pcap_file in pcap_folder:
+        beacon_packets = beacon_pcap_parser(pcap_file)
+        total_beacons.extend(beacon_packets)
 
-        for pcap_file in pcap_folder:
+    # convert to pandas DataFrame and save to CSV
+    df = pd.DataFrame(total_beacons)
 
-            beacon_packets = beacon_pcap_parser(pcap_file)
-            total_beacons.extend(beacon_packets)
+    df["channel"] = df["channel"].astype("int32")
+    df["rssi"] = df["rssi"].astype("int32")
 
-        # convert to pandas DataFrame and save to CSV
-        df = pd.DataFrame(total_beacons)
-
-        df["CHANNEL"] = df["CHANNEL"].astype("int32")
-        df["RSSI(dBm)"] = df["RSSI(dBm)"].astype("int32")
-
-        # parse the network name and save to CSV
-        network_name = os.path.basename(os.path.dirname(pcap_folder[0]))
-
-        df.to_csv(f"./data/{network_name}.csv", index=False)
+    df.to_csv(f"./data/parsed/{network_name}.csv", index=False)
 
 
 def beacon_pcap_parser(pcap_file) -> list[BeaconPacket]:
@@ -65,6 +57,29 @@ def beacon_pcap_parser(pcap_file) -> list[BeaconPacket]:
         wlan = packet.wlan  # 802.11 wlan
         mgt = packet["wlan.mgt"]  # 802.11 wireless LAN mgmt
 
+        ### Skip conditionals
+
+        # Some beacon packets send rssi = 0, drop these packets
+        rssi = int(radio.signal_dbm)
+        if not hasattr(radio, "signal_dbm") or rssi > -30:
+            continue
+
+        # Channel selection, if channel != primary channel drop because
+        # beacons from non primary channel have weaker rssi
+        channel = None
+        tag_fields = mgt._all_fields["wlan.tagged.all"]["wlan.tag"]
+        for tag in tag_fields:
+            if tag["wlan.tag.number"] == "61":
+                channel = tag["wlan.ht.info.primarychannel"]
+                break
+
+        # If tag didnt have primary channel, use channel
+        if channel is None:
+            channel = radio.channel
+        # if primary channel different than radio channel, drop
+        elif channel != radio.channel:
+            continue
+
         beacon_pkt = BeaconPacket()
 
         # TODO: in some captures, ssid is in hex form ex. "54:53:43" = TUC
@@ -73,14 +88,14 @@ def beacon_pcap_parser(pcap_file) -> list[BeaconPacket]:
         )
         beacon_pkt.ssid = ssid
         beacon_pkt.bssid = wlan.bssid
-        beacon_pkt.ta = wlan.ta
+        # beacon_pkt.ta = wlan.ta
         beacon_pkt.phy_type = radio.phy
-        beacon_pkt.channel = radio.channel
+        beacon_pkt.channel = channel
         beacon_pkt.frequency = radio.frequency
-        beacon_pkt.rssi = radio.signal_dbm  # if not wlan.signal_strength
+        beacon_pkt.rssi = rssi  # if not wlan.signal_strength
         beacon_pkt.snr = radio.snr if hasattr(radio, "snr") else None
         beacon_pkt.timestamp = mgt.all.timestamp
-        beacon_packets.append(beacon_pkt.to_dict())
+        beacon_packets.append(beacon_pkt.__dict__)
 
     # Uncomment if write in file
     # with open("beacon_packets.json", "w") as f:
@@ -149,4 +164,4 @@ def data_parser(pcap_file, ap_mac, dev_mac):
 
 
 # only export the functions
-__all__ = ["beacon_pcap_parser", "data_parser", "parse_beacon_folders"]
+__all__ = ["beacon_pcap_parser", "data_parser", "parse_network_beacon_pcaps"]

@@ -19,6 +19,8 @@ def add_rate_gap_to_df(df: pd.DataFrame):
 """
 
 
+# EXPORT ALL RATE_GAPS AS PERCENTAGES
+# WE WANT TO SHOW THAT 15 IS 97.8%
 def rate_gap_percentage(df: pd.DataFrame):
     rate_gap_count = (df["rate_gap"] > 0).sum()
     percentage = round((rate_gap_count / len(df)) * 100, 4)

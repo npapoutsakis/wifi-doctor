@@ -33,10 +33,10 @@ PCAP_HOW = "./pcaps/HowIWiFi_PCAP.pcap"
 
 
 # pcap files sniffed
-PCAP_FILES_2_4_GHZ_HOME = glob.glob("./beacon_pcaps/home-2.4ghz/*.pcap")
-PCAP_FILES_2_4_GHZ_TUC = glob.glob("./beacon_pcaps/tuc-2.4ghz/*.pcap")
-PCAP_FILES_5_GHZ_HOME = glob.glob("./beacon_pcaps/home-5ghz/*.pcap")
-PCAP_FILES_5_GHZ_TUC = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
+# HOME_PCAPS_2GHZ = glob.glob("./beacon_pcaps/home-2ghz/*.pcap")
+# TUC_PCAPS_2GHZ = glob.glob("./beacon_pcaps/tuc-2ghz/*.pcap")
+# HOME_PCAPS_5GHZ = glob.glob("./beacon_pcaps/home-5ghz/*.pcap")
+# TUC_PCAPS_5GHZ = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
 
 
 """
@@ -46,32 +46,24 @@ PCAP_FILES_5_GHZ_TUC = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
 
 def network_density():
 
-    pcap_folder_list_2_4_ghz = [PCAP_FILES_2_4_GHZ_TUC, PCAP_FILES_2_4_GHZ_HOME]
-    # pcap_folder_list_5_ghz = [PCAP_FILES_5_GHZ_TUC, PCAP_FILES_5_GHZ_HOME]
+    # networks = ["home-2ghz", "tuc-2ghz", "home-5ghz", "tuc-5ghz"]
+    networks = ["home-2ghz", "tuc-2ghz"]
 
-    # Parsing -> saves v files
-    parse_beacon_folders(pcap_folder_list_2_4_ghz)
-    # parse_beacon_folders(pcap_folder_list_5_ghz)
+    ### PARSER
+    for network in networks:
+        pcaps = glob.glob(f"./beacon_pcaps/{network}/*.pcap")
+        parse_network_beacon_pcaps(pcaps, network)
 
-    # monitor and calculate network density
-    network_files = {
-        "TUC-2.4GHz": "./data/tuc-2.4ghz.csv",
-        # "TUC-5GHz": "./data/tuc-5ghz.csv",
-        "HOME-2.4GHz": "./data/home-2.4ghz.csv",
-        # "HOME-5GHz":"./data/home-5ghz.csv",
-    }
+    ### MONITOR - aggregate data and calculate network density
+    aggregate_beacon_packets(networks)
+    monitor_network_density(networks)
 
-    # # monitor each network file
-    monitor_1_1(network_files)
+    ### VISUALIZER
+    # df = pd.read_csv(network_files["HOME-2GHz"])
+    # plot_network_density_figures(df, "HOME-2GHz")
 
-    # visualize
-    df = pd.read_csv(network_files["HOME-2.4GHz"])
-    plot_network_density_figures(df, "HOME-2.4GHz")
-
-    df = pd.read_csv(network_files["TUC-2.4GHz"])
-    plot_network_density_figures(df, "TUC-2.4GHz")
-
-    # return
+    # df = pd.read_csv(network_files["TUC-2GHz"])
+    # plot_network_density_figures(df, "TUC-2GHz")
 
 
 def data_analyze(network: str):
@@ -101,7 +93,7 @@ def data_analyze(network: str):
 
 
 def main():
-    data_analyze("HOW")
+    # data_analyze("HOW")
     # Uncomment gia to diko sou
     network_density()
 

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from data_packet import DataPacket
 import pandas as pd
@@ -37,22 +38,27 @@ def evaluate_throughput_df(df: pd.DataFrame):
 """
 
 
-def monitor_1_1(network_files):
+def aggregate_beacon_packets(network_files):
+    os.makedirs(f"./data/aggregates", exist_ok=True)
+    for network_name in network_files:
+        df = pd.read_csv(f"./data/parsed/{network_name}.csv")
+
+        # group by ssid, rssi and primary channel, count occurences
+        df = df.groupby(["ssid", "rssi", "channel"]).size().reset_index(name="count")
+
+        # group by ssid and channel to get rssi based on max occurences
+        df = df.groupby(["ssid", "channel"]).max("count")
+        df = df.drop("count", axis=1)
+        df.to_csv(f"./data/aggregates/agg_{network_name}.csv")
+
+
+def monitor_network_density(network_files):
     results = []
-    for network_name, network_file in network_files.items():
-        df = pd.read_csv(network_file)
-
-        # group by SSID and RSSI(dBm) and count the occurrences
-        result = df.groupby(["SSID", "RSSI(dBm)"]).size().reset_index(name="count")
-
-        # find the max of each ssid
-        max_entries_per_ssid = result.loc[result.groupby("SSID")["count"].idxmax()]
-
-        # Calculate RSSID metric
-        RSSID = (1 / abs(max_entries_per_ssid["RSSI(dBm)"])).sum()
+    for network_name in network_files:
+        df = pd.read_csv(f"./data/aggregates/agg_{network_name}.csv")
+        RSSID = (1 / abs(df["rssi"])).sum()
 
         results.append({"Network": network_name, "Density": RSSID})
 
     result_df = pd.DataFrame(results)
     result_df.to_csv("./output/network_density_metrics.csv", index=True)
-    # print(result_df)
