@@ -66,7 +66,10 @@ def network_density():
 
     # visualize
     df = pd.read_csv(network_files["HOME-2.4GHz"])
-    plot_rssi_vs_frequency(df)
+    plot_network_density_figures(df, "HOME-2.4GHz")
+
+    df = pd.read_csv(network_files["TUC-2.4GHz"])
+    plot_network_density_figures(df, "TUC-2.4GHz")
 
     # return
 
@@ -100,7 +103,7 @@ def data_analyze(network: str):
 def main():
     data_analyze("HOW")
     # Uncomment gia to diko sou
-    # network_density()
+    network_density()
 
 
 if __name__ == "__main__":
