@@ -103,7 +103,9 @@ def data_parser(pcap_file, ap_mac, dev_mac):
     )
 
     rel_time = float(data_capture[0].frame_info.time_relative)
-    prev_rssi = None
+
+    # Default value if first data packet has no rssi
+    prev_rssi = -100
 
     data_capture.load_packets()
     for packet in data_capture._packets:
@@ -135,7 +137,14 @@ def data_parser(pcap_file, ap_mac, dev_mac):
         prev_rssi = data_pkt.rssi
 
     df = pd.DataFrame([data_pkt.__dict__ for data_pkt in data_packets])
-    df.to_csv("./data/data_HOW.csv", index=False)
+
+    df["rssi"] = df["rssi"].astype(int)
+    df["phy"] = df["phy"].astype(int)
+    df["mcs"] = df["mcs"].astype(int)
+    df["data_rate"] = df["data_rate"].astype(float)
+    # df.to_csv("./data/data_HOW.csv", index=False)
+
+    return df.copy()
 
 
 # only export the functions

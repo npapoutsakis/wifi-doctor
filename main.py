@@ -73,23 +73,24 @@ def network_density():
 
 def data_analyze():
 
-    data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
+    ### Create Data
+    df = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
+    evaluate_throughput_df(df)
+    analyze_data_packets(df)
 
+    ### Save Data?
+
+    ### Visualize Data
     # read multiple csv's?
-    df = pd.read_csv("./data/data_HOW.csv")
-
-    # t1, throughput_arr1 = evaluate_throughput_list(packets)
-    throughput_arr = evaluate_throughput_df(df)
+    # df = pd.read_csv("./data/data_HOW.csv")
 
     # print(np.min(throughput_arr))
     # print(np.max(throughput_arr))
     # print(np.mean(throughput_arr))
 
-    rate_gap_arr = analyze_data_packets(df)
-
-    plot_rate_gap(df["timestamp"], rate_gap_arr)
-    # plot_throughput(t1, throughput_arr1)
-    # plot_throughput_df(df2)
+    plot_throughput_df(df)
+    plot_rate_gap(df)
+    plot_rssi_vs_throughput(df)
 
     plt.show()
 

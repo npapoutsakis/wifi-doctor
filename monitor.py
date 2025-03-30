@@ -21,14 +21,13 @@ def evaluate_throughput_list(packets: list[DataPacket]):
     return timestamps, throughput_arr
 
 
-def evaluate_throughput_df(packets_df: pd.DataFrame):
-    retransmits = packets_df["retry"].cumsum()
-    frame_loss_rate = retransmits / np.arange(1, len(packets_df) + 1)
+def evaluate_throughput_df(df: pd.DataFrame):
+    retransmits = df["retry"].cumsum().values
+    frame_loss_rate = retransmits / np.arange(1, len(df) + 1)
+    throughput_arr = df["data_rate"].values * (1.0 - frame_loss_rate)
+    df["throughput"] = throughput_arr
 
-    throughput_arr = packets_df["data_rate"].values * (1.0 - frame_loss_rate)
-    # packets_df.to_csv("./data/throughput.csv", index=False)
-
-    return throughput_arr
+    # df.to_csv("./data/throughput.csv", index=False)
 
 
 """

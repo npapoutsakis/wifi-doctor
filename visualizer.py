@@ -6,18 +6,18 @@ import numpy as np
 from data_packet import DataPacket
 from field_mappings import *
 
+"""
+Network Performance Visualizer
+"""
 
-def plot_throughput(t, data):
-    # t = np.array([pkt.timestamp for pkt in data])
-    # thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
-    plt.figure()
-    plt.plot(t, data)
-    plt.grid(True)
-    plt.ylabel("Throughput (Mbps)")
-    plt.xlabel("Time (s)")
-    # plt.tight_layout()
-    # plt.show()
-    return
+
+# def plot_throughput(t, data):
+#     plt.figure()
+#     plt.plot(t, data)
+#     plt.grid(True)
+#     plt.ylabel("Downlink Throughput (Mbps)")
+#     plt.xlabel("Time (s)")
+#     return
 
 
 def plot_throughput_df(df: pd.DataFrame):
@@ -33,32 +33,45 @@ def plot_throughput_df(df: pd.DataFrame):
     return
 
 
-def plot_rate_gap(t, data):
+# TODO: Idea, when i do the capture where as time passes i move further and further from the ap
+# then i plot rssi vs throughput and i see that when rssi drops, throughput goes down
+def plot_rssi_vs_throughput(df: pd.DataFrame):
+    plt.figure()
+    plt.scatter(df["throughput"].values, df["rssi"].values)
+    plt.xlabel("Throughput (Mbps)")
+    plt.ylabel("RSSI (dBm)")
 
-    # Get indices where values != 0
+
+def plot_rate_gap(df: pd.DataFrame):
+
+    t = df["timestamp"].values
+    data = df["rate_gap"].values
+
+    # Get indices and values where index != 0
     non_zero_mask = data != 0
     non_zero_times = t[non_zero_mask]
     non_zero_values = data[non_zero_mask]
 
+    min = non_zero_values.min()
+    max = non_zero_values.max()
+
     # Plot
-    plt.figure(figsize=(12, 4))
-    plt.scatter(non_zero_times, non_zero_values, c="b", s=10)
+    plt.figure()
+    plt.scatter(
+        non_zero_times,
+        non_zero_values,
+        marker="o",
+        c=non_zero_values,
+        s=10,
+        cmap="viridis",
+    )
     # plt.colorbar(label="Rate Gap Value")
-    plt.xlabel("Time")
-    plt.ylabel("Rate Gap")
-    plt.title("Non-Zero Rate Gaps Over Time")
+    plt.yticks(np.arange(min, max + 1))
+    plt.ylim(min - 0.5, max + 0.5)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Rate Gap (MCS)")
+    # plt.title("Non-Zero Rate Gaps Over Time")
     plt.grid(alpha=0.3)
-
-    # sns.heatmap(data, cmap="viridis", cbar=False, mask=(data == 0))
-    # plt.title("Sparse Non-Zero Values (Yellow/Green = 3/4/5)")
-
-    # plt.plot(t, data)
-    # plt.grid(True)
-    # plt.ylabel("Rate Gap")
-    # plt.xlabel("Time (s)")
-    # plt.tight_layout()
-    # plt.show()
-    return
 
 
 def plot_channel_occupancy_by_ssid(df):

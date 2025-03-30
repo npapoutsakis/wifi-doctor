@@ -7,6 +7,7 @@ from rate_gap import rate_gap
 def analyze_data_packets(df: pd.DataFrame):
 
     rate_gap_arr = rate_gap(df)
+    df["rate_gap"] = rate_gap_arr
 
     # phy_list = np.vectorize(lambda pkt: pkt.phy)(packets)
     # short_gi_list = np.vectorize(lambda pkt: pkt.short_gi)(packets)
@@ -16,4 +17,4 @@ def analyze_data_packets(df: pd.DataFrame):
     # bandwidth_list = np.vectorize(lambda pkt: pkt.bandwidth)(packets)
     # rssi_list = np.vectorize(lambda pkt: pkt.rssi)(packets)
 
-    return rate_gap_arr
+    # return rate_gap_arr
