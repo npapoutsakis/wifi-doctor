@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
@@ -7,7 +8,7 @@ from data_packet import DataPacket
 from field_mappings import *
 
 """
-Network Performance Visualizer
+    Network Performance Visualizer
 """
 
 
@@ -23,23 +24,46 @@ Network Performance Visualizer
 def plot_throughput_df(df: pd.DataFrame):
     # t = np.array([pkt.timestamp for pkt in data])
     # thresholds = [0, 25, 75, 150, 250, max(throughput) + 50] # keep???
-    plt.figure()
+    fig = plt.figure()
     plt.plot(df["timestamp"].values, df["throughput"].values)
     plt.grid(True)
     plt.ylabel("Throughput (Mbps)")
     plt.xlabel("Time (s)")
     # plt.tight_layout()
     # plt.show()
-    return
+    return fig
 
 
 # TODO: Idea, when i do the capture where as time passes i move further and further from the ap
 # then i plot rssi vs throughput and i see that when rssi drops, throughput goes down
 def plot_rssi_vs_throughput(df: pd.DataFrame):
-    plt.figure()
+    fig = plt.figure()
     plt.scatter(df["throughput"].values, df["rssi"].values)
     plt.xlabel("Throughput (Mbps)")
     plt.ylabel("RSSI (dBm)")
+    return fig
+
+
+def plot_rssi_vs_short_gi(df: pd.DataFrame):
+    fig = plt.figure(figsize=(8, 6))
+    sns.countplot(x="rssi", hue="short_gi", data=df, palette=["C0", "C1"])
+    plt.xlabel("RSSI (dBm)")
+    plt.ylabel("Count")
+    plt.title("RSSI vs Short Guard Interval")
+    plt.legend(title="Short Guard Interval", loc="upper right")
+    return fig
+
+
+def plot_rssi_vs_bandwidth(df: pd.DataFrame):
+    fig = plt.figure(figsize=(8, 6))
+    bandwidth_col = df["bandwidth"].map(lambda x: bandwidth_mapping[x])
+
+    sns.countplot(x=df["rssi"], hue=bandwidth_col)
+    plt.xlabel("RSSI (dBm)")
+    plt.ylabel("Count")
+    plt.title("RSSI vs Short Guard Interval")
+    plt.legend(title="Short Guard Interval", loc="upper right")
+    return fig
 
 
 def plot_rate_gap(df: pd.DataFrame):
@@ -56,7 +80,7 @@ def plot_rate_gap(df: pd.DataFrame):
     max = non_zero_values.max()
 
     # Plot
-    plt.figure()
+    fig = plt.figure()
     plt.scatter(
         non_zero_times,
         non_zero_values,
@@ -72,6 +96,28 @@ def plot_rate_gap(df: pd.DataFrame):
     plt.ylabel("Rate Gap (MCS)")
     # plt.title("Non-Zero Rate Gaps Over Time")
     plt.grid(alpha=0.3)
+
+    return fig
+
+
+def plot_network_performance_figures(df: pd.DataFrame, folder_name: str):
+    folder_path = f"./figures/{folder_name}"
+    os.makedirs(f"{folder_path}", exist_ok=True)
+
+    fig = plot_throughput_df(df)
+    fig.savefig(f"{folder_path}/{folder_name}_throughput.png")
+
+    fig = plot_rssi_vs_throughput(df)
+    fig.savefig(f"{folder_path}/{folder_name}_rssi_vs_throughput.png")
+
+    fig = plot_rate_gap(df)
+    fig.savefig(f"{folder_path}/{folder_name}_rate_gap.png")
+
+    fig = plot_rssi_vs_short_gi(df)
+    fig.savefig(f"{folder_path}/{folder_name}_rssi_vs_short_gi.png")
+
+    fig = plot_rssi_vs_bandwidth(df)
+    fig.savefig(f"{folder_path}/{folder_name}_rssi_vs_bandwidth.png")
 
 
 def plot_channel_occupancy_by_ssid(df):

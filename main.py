@@ -16,7 +16,7 @@ This will be the main file that will run the whole project.
     5. Visualization
 """
 
-from analyzer import analyze_data_packets
+from analyzer import *
 from field_mappings import *
 import pandas as pd
 import numpy as np
@@ -71,32 +71,34 @@ def network_density():
     # return
 
 
-def data_analyze():
+def data_analyze(network: str):
 
     ### Create Data
     df = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
     evaluate_throughput_df(df)
-    analyze_data_packets(df)
+    add_rate_gap_to_df(df)
+    df.to_csv("./data/how.csv", index=False)
 
     ### Save Data?
 
     ### Visualize Data
     # read multiple csv's?
-    # df = pd.read_csv("./data/data_HOW.csv")
 
     # print(np.min(throughput_arr))
     # print(np.max(throughput_arr))
     # print(np.mean(throughput_arr))
 
-    plot_throughput_df(df)
-    plot_rate_gap(df)
-    plot_rssi_vs_throughput(df)
-
-    plt.show()
+    # plot rssi vs phytype an allazei
+    # plot rssi vs rategap gia megali apostasi
+    # plot bandwidth vs rssi? gia 5ghz >bandwidth, isos otan peftei rssi peftei bandiwdth?
+    plot_network_performance_figures(df, network)
+    # print((df["short_gi"].values == False).sum())
+    # print((df["short_gi"].values == True).sum())
+    export_statistics(df, network)
 
 
 def main():
-    data_analyze()
+    data_analyze("HOW")
     # Uncomment gia to diko sou
     # network_density()
 

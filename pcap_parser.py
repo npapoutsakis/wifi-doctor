@@ -120,8 +120,8 @@ def data_parser(pcap_file, ap_mac, dev_mac):
         )
         data_pkt.phy = radio.phy
         data_pkt.mcs = radio.mcs_index
-        data_pkt.bandwidth = radio.bandwidth
-        data_pkt.short_gi = bool(radio.short_gi)
+        data_pkt.bandwidth = int(radio.bandwidth)
+        data_pkt.short_gi = bool(int(radio.short_gi))
         data_pkt.data_rate = radio.data_rate
 
         # Some dont contain signal_strength
@@ -138,6 +138,7 @@ def data_parser(pcap_file, ap_mac, dev_mac):
 
     df = pd.DataFrame([data_pkt.__dict__ for data_pkt in data_packets])
 
+    df["bandwidth"] = df["bandwidth"].astype(int)
     df["rssi"] = df["rssi"].astype(int)
     df["phy"] = df["phy"].astype(int)
     df["mcs"] = df["mcs"].astype(int)

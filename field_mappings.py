@@ -10,10 +10,10 @@ phy_type_mapping = {
 }
 
 bandwidth_mapping = {
-    "0": "20MHz",
-    "1": "40MHz",
-    "2": "80MHz",
-    "3": "160MHz",
+    0: "20MHz",
+    1: "40MHz",
+    2: "80MHz",
+    3: "160MHz",
 }
 
 channel_to_bandwidth_2_4_ghz = {
