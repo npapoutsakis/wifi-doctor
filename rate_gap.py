@@ -24,6 +24,29 @@ def get_exp_rate_80211n(rssi: int):
         return 0
 
 
+def get_exp_rate_80211ac(rssi: int):
+    if rssi >= -57:
+        return 9
+    elif rssi == -59:
+        return 8
+    elif rssi >= -64:
+        return 7
+    elif rssi == -65:
+        return 6
+    elif rssi == -66:
+        return 5
+    elif rssi >= -70:
+        return 4
+    elif rssi >= -74:
+        return 3
+    elif rssi >= -77:
+        return 2
+    elif rssi >= -82:
+        return 1
+    else:
+        return 0
+
+
 def rate_gap(df: pd.DataFrame):
     rate_gap_arr = np.empty(df.shape[0], dtype=int)  # get rows
 
@@ -31,6 +54,8 @@ def rate_gap(df: pd.DataFrame):
         if phy_type_mapping[packet.get("phy")] == "802.11n":
             gap = rate_gap_80211n(packet.get("rssi"), packet.get("mcs"))
             rate_gap_arr[index] = gap
+        elif phy_type_mapping[packet.get("phy")] == "802.11ac":
+            gap = rate_gap_80211ac(packet.get("rssi"), packet.get("mcs"))
         else:
             print("Non-802.11n packet")
 
@@ -54,5 +79,26 @@ def rate_gap_80211n(rssi: int, rate: int):
     # 3 spatials streams
     else:
         gap = exp_rate + 16 - rate
+
+    return gap
+
+
+def rate_gap_80211ac(rssi: int, rate: int):
+    # Check that rssi exists in packet, if not change monitor to always include a value
+    assert rssi is not None
+
+    exp_rate = get_exp_rate_80211ac(rssi)
+
+    # 1 spatial stream
+    if rate < 10:
+        gap = exp_rate - rate
+
+    # 2 spatials streams
+    elif rate < 20:
+        gap = exp_rate + 10 - rate
+
+    # 3 spatials streams
+    else:
+        gap = exp_rate + 20 - rate
 
     return gap

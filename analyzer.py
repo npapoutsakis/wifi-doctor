@@ -68,8 +68,8 @@ def general_statistics(df: pd.DataFrame):
             "min": df[columns].min().map(lambda x: round(x, 4)),
             "median": df[columns].median().map(lambda x: round(x, 4)),
             "mean": df[columns].mean().map(lambda x: round(x, 4)),
-            "75p": df[columns].quantile(0.75).map(lambda x: round(x, 4)),
-            "95p": df[columns].quantile(0.95).map(lambda x: round(x, 4)),
+            "75p": df[columns].quantile(0.75).map(lambda x: round(x, 4)),  # 75p
+            "95p": df[columns].quantile(0.95).map(lambda x: round(x, 4)),  # 95p
             "max": df[columns].max().map(lambda x: round(x, 4)),
         }
     )
