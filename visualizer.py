@@ -62,8 +62,8 @@ def plot_rssi_vs_bandwidth(df: pd.DataFrame):
     sns.countplot(x=df["rssi"], hue=bandwidth_col)
     plt.xlabel("RSSI (dBm)")
     plt.ylabel("Count")
-    plt.title("RSSI vs Short Guard Interval")
-    plt.legend(title="Short Guard Interval", loc="upper right")
+    plt.title("RSSI vs Bandwidth")
+    plt.legend(title="Bandwidth", loc="upper right")
     return fig
 
 
@@ -126,32 +126,7 @@ def plot_network_performance_figures(df: pd.DataFrame, folder_name: str):
 """
 
 
-def plot_channel_occupancy_by_ssid(df):
-    # Group data by CHANNEL and SSID and count the occurrences
-    channel_ssid_counts = df.groupby(["CHANNEL", "SSID"]).size().unstack(fill_value=0)
-
-    # Generate a color palette for each SSID
-    ssid_colors = sns.color_palette("tab20", len(channel_ssid_counts.columns))
-
-    fig = plt.figure()
-
-    # Plot channel occupancy with different colors for SSIDs
-    ax = channel_ssid_counts.plot(
-        kind="bar", stacked=True, figsize=(12, 7), color=ssid_colors, edgecolor="black"
-    )
-
-    # Adding labels and title
-    plt.title("Channel Occupancy by SSID", fontsize=14)
-    plt.xlabel("Channel", fontsize=12)
-    plt.ylabel("Number of Beacons", fontsize=12)
-    plt.xticks(rotation=0)  # Rotate x-axis labels to make them horizontal
-    plt.legend(title="SSID", bbox_to_anchor=(1.05, 1), loc="upper left")
-    plt.tight_layout()
-
-    return fig
-
-
-def plot_rssi_vs_frequency(df: pd.DataFrame, network_name, is_5ghz):
+def plot_rssi_vs_channels_occupancy(df: pd.DataFrame, network_name, is_5ghz):
     # Get saturated colors for better visibility
     if is_5ghz:
         columns = CHANNELS_5GHZ
@@ -201,8 +176,5 @@ def plot_network_density_figures(df: pd.DataFrame, network_name: str, is_5ghz: b
     folder_path = f"./figures/density/{network_name}"
     os.makedirs(f"{folder_path}", exist_ok=True)
 
-    # fig = plot_channel_occupancy_by_ssid(df)
-    # fig.savefig(f"{folder_path}/{network_name}_occupancy.png")
-
-    fig = plot_rssi_vs_frequency(df, network_name, is_5ghz)
-    fig.savefig(f"{folder_path}/{network_name}_rssi_vs_frequency.png")
+    fig = plot_rssi_vs_channels_occupancy(df, network_name, is_5ghz)
+    fig.savefig(f"{folder_path}/{network_name}_occupancy.png")

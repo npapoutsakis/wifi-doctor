@@ -31,14 +31,6 @@ AP_MAC = "2C:F8:9B:DD:06:A0"
 DEV_MAC = "00:20:A6:FC:B0:36"
 PCAP_HOW = "./pcaps/HowIWiFi_PCAP.pcap"
 
-
-# pcap files sniffed
-# HOME_PCAPS_2GHZ = glob.glob("./beacon_pcaps/home-2ghz/*.pcap")
-# TUC_PCAPS_2GHZ = glob.glob("./beacon_pcaps/tuc-2ghz/*.pcap")
-# HOME_PCAPS_5GHZ = glob.glob("./beacon_pcaps/home-5ghz/*.pcap")
-# TUC_PCAPS_5GHZ = glob.glob("./beacon_pcaps/tuc-5ghz/*.pcap")
-
-
 """
     Scenario 1.1: WiFi Network Density
 """
@@ -72,27 +64,22 @@ def data_analyze(network: str):
     add_rate_gap_to_df(df)
     df.to_csv("./data/how.csv", index=False)
 
+    df = pd.read_csv(f"./data/how.csv")
+
     ### Save Data?
 
     ### Visualize Data
-    # read multiple csv's?
-
-    # print(np.min(throughput_arr))
-    # print(np.max(throughput_arr))
-    # print(np.mean(throughput_arr))
 
     # plot rssi vs phytype an allazei
     # plot rssi vs rategap gia megali apostasi
     # plot bandwidth vs rssi? gia 5ghz >bandwidth, isos otan peftei rssi peftei bandiwdth?
+
     plot_network_performance_figures(df, network)
-    # print((df["short_gi"].values == False).sum())
-    # print((df["short_gi"].values == True).sum())
     export_statistics(df, network)
 
 
 def main():
     # data_analyze("HOW")
-    # Uncomment gia to diko sou
     network_density()
 
 
