@@ -46,8 +46,7 @@ PCAP_HOW = "./pcaps/HowIWiFi_PCAP.pcap"
 
 def network_density():
 
-    # networks = ["home-2ghz", "tuc-2ghz", "home-5ghz", "tuc-5ghz"]
-    networks = ["home-2ghz", "tuc-2ghz"]
+    networks = ["home-2ghz", "tuc-2ghz", "home-5ghz", "tuc-5ghz"]
 
     ### PARSER
     for network in networks:
@@ -59,11 +58,10 @@ def network_density():
     monitor_network_density(networks)
 
     ### VISUALIZER
-    # df = pd.read_csv(network_files["HOME-2GHz"])
-    # plot_network_density_figures(df, "HOME-2GHz")
-
-    # df = pd.read_csv(network_files["TUC-2GHz"])
-    # plot_network_density_figures(df, "TUC-2GHz")
+    for network in networks:
+        is_5ghz = "5ghz" in network
+        df = pd.read_csv(f"./data/aggregates/agg_{network}.csv")
+        plot_network_density_figures(df, network, is_5ghz)
 
 
 def data_analyze(network: str):

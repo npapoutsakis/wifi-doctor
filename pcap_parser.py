@@ -119,14 +119,19 @@ def data_parser(pcap_file, ap_mac, dev_mac):
 
     rel_time = float(data_capture[0].frame_info.time_relative)
 
-    # Default value if first data packet has no rssi
-    prev_rssi = -100
+    # Default value if first data packet(s) have no rssi
+    prev_rssi = None
 
     data_capture.load_packets()
     for packet in data_capture._packets:
         frame = packet.frame_info  # frame
         radio = packet.wlan_radio  # 802.11 radio
         wlan = packet.wlan  # 802.11 wlan
+
+        # Skip conditionals
+        rssi = radio.signal_dbm if hasattr(radio, "signal_dbm") else prev_rssi
+        if rssi is None:
+            continue
 
         data_pkt = DataPacket()
 
@@ -140,9 +145,7 @@ def data_parser(pcap_file, ap_mac, dev_mac):
         data_pkt.data_rate = radio.data_rate
 
         # Some dont contain signal_strength
-        data_pkt.rssi = (
-            radio.signal_dbm if hasattr(radio, "signal_dbm") else prev_rssi
-        )  # if not wlan.signal_strength
+        data_pkt.rssi = rssi
         data_pkt.frequency = radio.frequency
         # data_pkt.rate_gap = idk if here or analyzer
         data_pkt.timestamp = float(frame.time_relative) - rel_time

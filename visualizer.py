@@ -6,6 +6,7 @@ import seaborn as sns
 import numpy as np
 from data_packet import DataPacket
 from field_mappings import *
+from helper import CHANNELS_5GHZ
 
 """
     Network Performance Visualizer
@@ -150,72 +151,58 @@ def plot_channel_occupancy_by_ssid(df):
     return fig
 
 
-def plot_rssi_vs_frequency(df):
-    channel_ssid_rssi = (
-        df.groupby(["channel", "ssid"])["rssi"].mean().unstack(fill_value=0)
-    )
-
+def plot_rssi_vs_frequency(df: pd.DataFrame, network_name, is_5ghz):
     # Get saturated colors for better visibility
-    ssid_colors = sns.color_palette("tab20", len(channel_ssid_rssi.columns))
-
-    # Set transparency range (more opaque than before)
-    alpha_values = np.linspace(0.7, 0.95, len(channel_ssid_rssi.columns))
+    if is_5ghz:
+        columns = CHANNELS_5GHZ
+    else:
+        columns = range(1, 14)
 
     # Create plot
-    fig = plt.figure(figsize=(14, 7))
-    legend_handles = []
+    fig = plt.figure()
 
-    # Plot each SSID and channel
-    for i, ssid in enumerate(channel_ssid_rssi.columns):
-        for channel in channel_ssid_rssi.index:
-            # TODO: Ftiakse to bandwidth
-            bandwidth = channel_to_bandwidth_2_4_ghz[channel]
-            rssi_value = channel_ssid_rssi.loc[channel, ssid]
-            if rssi_value == 0:
-                print(f"SSID: {ssid} Channel: {channel} RSSI: {rssi_value}")
+    # Create the heatmap
 
-            width = bandwidth / 5  # 20MHz width = 4 channel units
+    sns.set_style("white")
 
-            plt.bar(
-                channel,
-                rssi_value + 90,
-                width=width * 0.9,
-                color=ssid_colors[i],
-                alpha=0.3,
-                edgecolor="black",
-                bottom=-90,
-            )
+    df = df.pivot_table(index="rssi", columns="channel", aggfunc="size")
+    df = df.reindex(columns=columns, fill_value=np.nan)
 
-        legend_handles.append(Line2D([0], [0], color=ssid_colors[i], lw=4, label=ssid))
+    vmin = df.min().min()
+    vmax = df.max().max()
 
-    # Configure axes with INVERTED Y-AXIS
-    plt.xticks(range(1, 14))
-    plt.yticks(range(-90, 31, 10))
-    plt.ylim(-90, 30)
-    # plt.gca().invert_yaxis()  # This line flips the y-axis
-
-    # Add labels and title
-    plt.title("Wi-Fi Signal Strength by Channel", fontsize=14)
-    plt.xlabel("Channel", fontsize=12)
-    plt.ylabel("Signal Strength (dBm)", fontsize=12)
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
-
-    # Add legend
-    plt.legend(
-        handles=legend_handles, title="SSID", bbox_to_anchor=(1.05, 1), loc="upper left"
+    g = sns.heatmap(
+        df,
+        cmap="viridis",
+        cbar_kws={"shrink": 0.5},
+        robust=True,
+        square=True,
+        linewidths=0.5,
+        linecolor="black",
+        vmin=vmin,
+        vmax=vmax,
+        rasterized=True,
+        xticklabels=columns,
     )
+
+    g.set_ylabel("RSSI (dBm)")
+    g.set_xlabel("Channel")
+    g.invert_yaxis()
+
+    # Add title
+    plt.title(f"{network_name} Network Density")
 
     plt.tight_layout()
 
     return fig
 
 
-def plot_network_density_figures(df: pd.DataFrame, folder_name: str):
-    folder_path = f"./figures/density/{folder_name}"
+def plot_network_density_figures(df: pd.DataFrame, network_name: str, is_5ghz: bool):
+    folder_path = f"./figures/density/{network_name}"
     os.makedirs(f"{folder_path}", exist_ok=True)
 
     # fig = plot_channel_occupancy_by_ssid(df)
-    # fig.savefig(f"{folder_path}/{folder_name}_occupancy.png")
+    # fig.savefig(f"{folder_path}/{network_name}_occupancy.png")
 
-    fig = plot_rssi_vs_frequency(df)
-    fig.savefig(f"{folder_path}/{folder_name}_rssi_vs_frequency.png")
+    fig = plot_rssi_vs_frequency(df, network_name, is_5ghz)
+    fig.savefig(f"{folder_path}/{network_name}_rssi_vs_frequency.png")
