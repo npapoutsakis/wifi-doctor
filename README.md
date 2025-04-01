@@ -66,10 +66,13 @@ WiFi Doctor is designed to passively diagnose Wi-Fi network performance from a d
   Creates a directory (if it doesn’t exist) and exports various performance statistics (rate gap percentage, PHY type distribution, short_gi statistics, and general statistics) into separate CSV files.
 
 ### 5. **Visualizer** (`visualizer.py`)
-- Although not detailed in the provided code snippets, this module is intended to generate plots (e.g., throughput vs. time, signal strength vs. data rate) to visually represent the performance metrics computed by the monitor and analyzer modules.
-
+- This module is intended to visually represent the performance metrics computed by the monitor and analyzer modules.
 
 ---
+## Prerequisites
+  - **Install neccessary packages:** 
+  `pip install -r requirements.txt`
+
 
 ## How to Run
 
@@ -81,13 +84,13 @@ WiFi Doctor is designed to passively diagnose Wi-Fi network performance from a d
 2. **Analyze captured data**:
    Modify and run `main.py` with either:
    ```python
-   data_analyze("NETWORK_NAME")
-   network_density()
+   network_density() //1.1
+   data_analyze("NETWORK_NAME") //1.2
    ```
 
 3. **View outputs**:
-   - Statistics → `/statistics`
-   - Plots → `/output`
+   - Statistics → `/statistics & /output` 
+   - Plots → `/figures`
 
 ---
 
