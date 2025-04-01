@@ -79,7 +79,7 @@ def data_analyze(network: str):
 
 
 def main():
-    # data_analyze("HOW")
+    data_analyze("HOW")
     network_density()
 
 
