@@ -4,7 +4,7 @@
 #       - Nikolaos Papoutsakis  2019030206
 #       - Argyris Christakis    2019030078
 #       - Michalis Syrianos     2019030058
-#       - Swkratis Siganos      2019030097
+#       - Sokratis Siganos      2019030097
 
 
 """
@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 
 AP_MAC = "2C:F8:9B:DD:06:A0"
 DEV_MAC = "00:20:A6:FC:B0:36"
-PCAP_HOW = "./pcaps/HowIWiFi_PCAP.pcap"
+PCAP_HOW = "./data_pcaps/HowIWiFi_PCAP.pcap"
 
 """
     Scenario 1.1: WiFi Network Density
@@ -40,10 +40,14 @@ def network_density():
 
     networks = ["home-2ghz", "tuc-2ghz", "home-5ghz", "tuc-5ghz"]
 
+    # !Disabled parser since .zip doesn't contain beacon pcaps due to size.
+    # Insert pcaps in beacon_pcaps/{network_name}/*.pcap for beacon packet analysis
+    # Insert network_name in list above
+
     ### PARSER
-    for network in networks:
-        pcaps = glob.glob(f"./beacon_pcaps/{network}/*.pcap")
-        parse_network_beacon_pcaps(pcaps, network)
+    # for network in networks:
+    #     pcaps = glob.glob(f"./beacon_pcaps/{network}/*.pcap")
+    #     parse_network_beacon_pcaps(pcaps, network)
 
     ### MONITOR - aggregate data and calculate network density
     aggregate_beacon_packets(networks)
@@ -64,16 +68,10 @@ def data_analyze(network: str):
     add_rate_gap_to_df(df)
     df.to_csv("./data/how.csv", index=False)
 
+    ### Save Data
     df = pd.read_csv(f"./data/how.csv")
 
-    ### Save Data?
-
     ### Visualize Data
-
-    # plot rssi vs phytype an allazei
-    # plot rssi vs rategap gia megali apostasi
-    # plot bandwidth vs rssi? gia 5ghz >bandwidth, isos otan peftei rssi peftei bandiwdth?
-
     plot_network_performance_figures(df, network)
     export_statistics(df, network)
 
