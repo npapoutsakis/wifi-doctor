@@ -13,6 +13,7 @@ class DataPacket:
     # rate_gap: float | None = None
     frequency: int | None = None
     timestamp: float | None = None
+    # spatial_streams: int | None = None
 
     def __repr__(self):
         return json.dumps(self.__dict__, separators=(",", ":"))

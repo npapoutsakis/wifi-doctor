@@ -27,9 +27,22 @@ from visualizer import *
 import matplotlib.pyplot as plt
 
 
-AP_MAC = "2C:F8:9B:DD:06:A0"
-DEV_MAC = "00:20:A6:FC:B0:36"
+# AP_MAC = "2C:F8:9B:DD:06:A0"
+# DEV_MAC = "00:20:A6:FC:B0:36"
 PCAP_HOW = "./data_pcaps/HowIWiFi_PCAP.pcap"
+
+
+TA_MAC_2 = "F8:AA:3F:6D:02:B6"
+TA_MAC_5 = "F8:AA:3F:6D:02:BB"
+RA_MAC = "f4:02:28:d6:f4:f8"
+
+THR_2GHZ_1M = "./data_pcaps/2ghz_1m.pcap"
+THR_2GHZ_10M = "./data_pcaps/2ghz_10m.pcap"
+THR_2GHZ_MOVING = "./data_pcaps/2ghz_moving.pcap"
+THR_5GHZ_1M = "./data_pcaps/5ghz_1m.pcap"
+THR_5GHZ_10M = "./data_pcaps/5ghz_10m.pcap"
+THR_5GHZ_MOVING = "./data_pcaps/5ghz_moving.pcap"
+
 
 """
     Scenario 1.1: WiFi Network Density
@@ -60,25 +73,33 @@ def network_density():
         plot_network_density_figures(df, network, is_5ghz)
 
 
-def data_analyze(network: str):
+def data_analyze(pcap_f: str, is_5ghz: bool):
+
+    filename = os.path.basename(pcap_f).replace('.pcap', '')   # '2ghz_1m'
+    ta_mac = TA_MAC_5 if is_5ghz else TA_MAC_2
 
     ### Create Data
-    df = data_parser(PCAP_HOW, AP_MAC, DEV_MAC)
+    df = data_parser(pcap_f, ta_mac, RA_MAC)
     evaluate_throughput_df(df)
     add_rate_gap_to_df(df)
-    df.to_csv("./data/how.csv", index=False)
+    df.to_csv(f"./data/sniffed-throughput/{filename}.csv", index=False)
 
     ### Save Data
-    df = pd.read_csv(f"./data/how.csv")
+    df = pd.read_csv(f"./data/sniffed-throughput/{filename}.csv")
 
     ### Visualize Data
-    plot_network_performance_figures(df, network)
-    export_statistics(df, network)
+    plot_network_performance_figures(df, filename)
+    export_statistics(df, filename)
 
 
 def main():
-    data_analyze("HOW")
-    network_density()
+    # data_analyze(THR_2GHZ_1M, False)
+    # data_analyze(THR_2GHZ_10M, False)
+    # data_analyze(THR_2GHZ_MOVING, False)
+    data_analyze(THR_5GHZ_1M, True)
+    data_analyze(THR_5GHZ_10M, True)
+    data_analyze(THR_5GHZ_MOVING, True)
+    # network_density()
 
 
 if __name__ == "__main__":
