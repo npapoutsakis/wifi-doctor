@@ -91,14 +91,31 @@ def data_analyze(pcap_f: str, is_5ghz: bool):
     plot_network_performance_figures(df, filename)
     export_statistics(df, filename)
 
+def speedtest_analyze(pcap_f: str):
+    filename = os.path.basename(pcap_f).replace('.pcap', '')   # '2ghz_1m'
+    
+    df = pd.read_csv(f"./data/sniffed-throughput/{filename}.csv")
+    agg_df = evaluate_speedtest_metrics(df)
+    agg_df.to_csv(f"./data/sniffed-throughput/agg_{filename}.csv", index=False)
+
+    # ### Visualize Data
+    # plot_network_performance_figures(df, filename)
+    # export_statistics(df, filename)
 
 def main():
     # data_analyze(THR_2GHZ_1M, False)
     # data_analyze(THR_2GHZ_10M, False)
     # data_analyze(THR_2GHZ_MOVING, False)
-    data_analyze(THR_5GHZ_1M, True)
-    data_analyze(THR_5GHZ_10M, True)
-    data_analyze(THR_5GHZ_MOVING, True)
+    # data_analyze(THR_5GHZ_1M, True)
+    # data_analyze(THR_5GHZ_10M, True)
+    # data_analyze(THR_5GHZ_MOVING, True)
+    
+    speedtest_analyze(THR_2GHZ_1M)
+    speedtest_analyze(THR_2GHZ_10M)
+    speedtest_analyze(THR_2GHZ_MOVING)
+    speedtest_analyze(THR_5GHZ_1M)
+    speedtest_analyze(THR_5GHZ_10M)
+    speedtest_analyze(THR_5GHZ_MOVING)
     # network_density()
 
 

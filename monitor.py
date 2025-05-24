@@ -31,6 +31,31 @@ def evaluate_throughput_df(df: pd.DataFrame):
     # df.to_csv("./data/throughput.csv", index=False)
 
 
+def evaluate_speedtest_metrics(df: pd.DataFrame):
+    interval = 2
+    max_time = 30
+    
+    # Assign each row to a time bin
+    bins = np.arange(0, max_time + interval, interval)
+    df['time_bin'] = pd.cut(df['timestamp'], bins=bins, right=False, labels=bins[:-1])
+
+    # Group by time_bin and aggregate
+    agg_df = df.groupby('time_bin').agg(
+        mean_data_rate=('data_rate', 'mean'),
+        most_common_rssi=('rssi', lambda x: next((v for v in x.value_counts().index if v != 0), x.value_counts().idxmax())),
+        retry_percentage=('retry', 'mean'),  # mean of 0/1 is percentage
+        mean_rate_gap=('rate_gap', 'mean')
+    ).reset_index()
+
+    # Convert retry_percentage to percentage
+    agg_df['retry_percentage'] *= 100
+    # agg_df['time_bin'] = agg_df['time_bin'].astype(int)
+
+    return agg_df
+    
+    
+
+
 """
     Monitoring 1.1: Network Density
     This function uses the RSSID metric referenced in the paper:

@@ -189,5 +189,97 @@ def data_parser(pcap_file, ta_mac, ra_mac):
     return df.copy()
 
 
+
+
+
+### FOR SPEEDTEST APP 
+def speedtest_parser(pcap_file, ta_mac, ra_mac):
+
+    data_packets = []
+
+    # DATA_DISP_FILTER = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ta_mac} && wlan.ra == {ra_mac})) && !eapol"
+    # DATA_DISP_FILTER_PREV = f"(wlan.fc.type_subtype == 0x0020 || wlan.fc.type_subtype == 0x0028) && ((wlan.ta == {ta_mac} && wlan.ra == {ra_mac}) || (wlan.ta == {ra_mac} && wlan.ra == {ta_mac})) && wlan.ra == wlan.da && !eapol"
+
+    DATA_DISP_FILTER = f"wlan.ra == {ra_mac} && wlan.ta == {ta_mac} && wlan.fc.type_subtype == 40 && !eapol"
+    data_capture = pyshark.FileCapture(
+        pcap_file, display_filter=DATA_DISP_FILTER, use_json=True
+    )
+    
+    data_capture.load_packets()
+    data_capture._packets.pop()
+    
+    count = 0  # Used for counting how many packets are excluded due to null values
+
+    rel_time = float(data_capture[0].frame_info.time_relative)
+
+    # Default value if first data packet(s) have no rssi
+    prev_rssi = None
+
+    for packet in data_capture._packets:
+        frame = packet.frame_info  # frame
+        radio = packet.wlan_radio  # 802.11 radio
+        wlan = packet.wlan  # 802.11 wlan
+        
+        ac_user = radio._all_fields["wlan_radio.11ac.user"] if hasattr(radio, "wlan_radio.11ac.user") else None
+
+        if (
+            (not hasattr(radio, "mcs_index") and not "wlan_radio.11ac.mcs" in ac_user)
+            or not hasattr(radio, "bandwidth")
+            or not hasattr(radio, "data_rate")
+            or not hasattr(radio, "short_gi")
+            or not hasattr(radio, "frequency")
+            or not hasattr(radio, "phy")
+        ):
+                count += 1
+                continue
+
+        # Skip conditionals
+        rssi = radio.signal_dbm if hasattr(radio, "signal_dbm") else prev_rssi
+        if rssi is None:
+            continue
+
+        data_pkt = DataPacket()
+
+        data_pkt.retry = bool(
+            int(wlan._all_fields["wlan.fc_tree"]["wlan.flags_tree"]["wlan.fc.retry"])
+        )
+        data_pkt.phy = radio.phy
+        data_pkt.mcs = radio.mcs_index if ac_user is None else ac_user["wlan_radio.11ac.mcs"]
+        # data_pkt.spatial_streams = int(ac_user['wlan_radio.11ac.nss']) if ac_user is not None else 1
+        
+        data_pkt.bandwidth = int(radio.bandwidth)
+        data_pkt.short_gi = bool(int(radio.short_gi))
+        data_pkt.data_rate = radio.data_rate
+
+        # Some dont contain signal_strength
+        data_pkt.rssi = rssi
+        data_pkt.frequency = radio.frequency
+        # data_pkt.rate_gap = idk if here or analyzer
+        data_pkt.timestamp = float(frame.time_relative) - rel_time
+
+        data_packets.append(data_pkt)
+
+        prev_rssi = data_pkt.rssi
+
+    print(f"Total excluded packets: {count}")
+    df = pd.DataFrame([data_pkt.__dict__ for data_pkt in data_packets])
+
+
+    df["bandwidth"] = df["bandwidth"].astype(int)
+    df["rssi"] = df["rssi"].astype(int)
+    df["phy"] = df["phy"].astype(int)
+    df["mcs"] = df["mcs"].astype(int)
+    df["data_rate"] = df["data_rate"].astype(float)
+    # df["spatial_streams"] = df["spatial_streams"].astype(int)
+    # df.to_csv("./data/data_HOW.csv", index=False)
+
+    return df.copy()
+
+
+
+
+
+
+
 # only export the functions
-__all__ = ["beacon_pcap_parser", "data_parser", "parse_network_beacon_pcaps"]
+__all__ = ["beacon_pcap_parser", "data_parser", "parse_network_beacon_pcaps", "speedtest_parser"]
