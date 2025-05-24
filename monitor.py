@@ -32,23 +32,35 @@ def evaluate_throughput_df(df: pd.DataFrame):
 
 
 def evaluate_speedtest_metrics(df: pd.DataFrame):
+    
+    # Calculate channel utilization
+    df["airtime"] = df['data_size'] / (df['data_rate'] * 1e6) 
+    (df[df['retry'] == False]['airtime']) = 0
+    
+    # df["useful_airtime"] = df[df['retry'] == False]['airtime'].sum()
+    # duration = df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]
+    # channel_utilization = df["useful_airtime"] / duration
+    # print(f"Channel Utilization: {channel_utilization}")
+    
     interval = 2
     max_time = 30
-    
     # Assign each row to a time bin
     bins = np.arange(0, max_time + interval, interval)
     df['time_bin'] = pd.cut(df['timestamp'], bins=bins, right=False, labels=bins[:-1])
 
     # Group by time_bin and aggregate
     agg_df = df.groupby('time_bin').agg(
+        mean_throughput=('throughput', 'mean'),
         mean_data_rate=('data_rate', 'mean'),
         most_common_rssi=('rssi', lambda x: next((v for v in x.value_counts().index if v != 0), x.value_counts().idxmax())),
         retry_percentage=('retry', 'mean'),  # mean of 0/1 is percentage
-        mean_rate_gap=('rate_gap', 'mean')
+        mean_rate_gap=('rate_gap', 'mean'),
+        useful_airtime=('airtime', 'sum')
     ).reset_index()
 
     # Convert retry_percentage to percentage
     agg_df['retry_percentage'] *= 100
+    agg_df['revised_throughput'] = agg_df['mean_data_rate'] * (agg_df["useful_airtime"] / interval)
     # agg_df['time_bin'] = agg_df['time_bin'].astype(int)
 
     return agg_df

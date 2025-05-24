@@ -119,6 +119,7 @@ def plot_network_performance_figures(df: pd.DataFrame, folder_name: str):
 
     fig = plot_rssi_vs_bandwidth(df)
     fig.savefig(f"{folder_path}/{folder_name}_rssi_vs_bandwidth.png")
+    plt.close("all")
 
 
 """

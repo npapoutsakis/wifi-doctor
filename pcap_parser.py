@@ -136,7 +136,7 @@ def data_parser(pcap_file, ta_mac, ra_mac):
         ac_user = radio._all_fields["wlan_radio.11ac.user"] if hasattr(radio, "wlan_radio.11ac.user") else None
 
         if (
-            (not hasattr(radio, "mcs_index") and not "wlan_radio.11ac.mcs" in ac_user)
+            (not hasattr(radio, "mcs_index") and (ac_user is not None and not "wlan_radio.11ac.mcs" in ac_user))
             or not hasattr(radio, "bandwidth")
             or not hasattr(radio, "data_rate")
             or not hasattr(radio, "short_gi")
@@ -163,6 +163,9 @@ def data_parser(pcap_file, ta_mac, ra_mac):
         data_pkt.bandwidth = int(radio.bandwidth)
         data_pkt.short_gi = bool(int(radio.short_gi))
         data_pkt.data_rate = radio.data_rate
+        
+        data_pkt.data_size = int(packet.data.len)*8
+        
 
         # Some dont contain signal_strength
         data_pkt.rssi = rssi
@@ -183,6 +186,7 @@ def data_parser(pcap_file, ta_mac, ra_mac):
     df["phy"] = df["phy"].astype(int)
     df["mcs"] = df["mcs"].astype(int)
     df["data_rate"] = df["data_rate"].astype(float)
+    df["data_size"] = df["data_size"].astype(int)
     # df["spatial_streams"] = df["spatial_streams"].astype(int)
     # df.to_csv("./data/data_HOW.csv", index=False)
 
